@@ -1,0 +1,22 @@
+# Binaries / build artifacts
+*.exe
+surat-waris
+*.test
+
+# Database lokal (jangan commit data kelurahan)
+surat-waris.db
+surat-waris.db-shm
+surat-waris.db-wal
+
+# Tooling lokal (sqlc prebuilt) & artefak sementara
+.tools/
+*.log
+cookies.txt
+body.txt
+
+# Frontend (dibangun oleh CI / `make build-frontend`)
+frontend/node_modules/
+frontend/dist/
+
+# Settings lokal Claude Code (personal)
+.claude/settings.local.json

@@ -1,0 +1,7 @@
+# Normalisasi line ending → LF di repo (hindari masalah CRLF di CI Linux)
+* text=auto eol=lf
+
+# Biner
+*.exe binary
+*.png binary
+*.ico binary
