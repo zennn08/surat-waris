@@ -11,20 +11,22 @@ import (
 )
 
 type pengaturanView struct {
-	NamaKelurahan string `json:"nama_kelurahan"`
-	Kecamatan     string `json:"kecamatan"`
-	Kabupaten     string `json:"kabupaten"`
-	Provinsi      string `json:"provinsi"`
-	FormatNomor   string `json:"format_nomor"`
+	NamaKelurahan    string `json:"nama_kelurahan"`
+	Kecamatan        string `json:"kecamatan"`
+	Kota             string `json:"kota"`
+	KodeKecamatan    string `json:"kode_kecamatan"`
+	KodeKelurahan    string `json:"kode_kelurahan"`
+	InstansiKematian string `json:"instansi_kematian"`
 }
 
 func toPengaturanView(p db.Pengaturan) pengaturanView {
 	return pengaturanView{
-		NamaKelurahan: strOrEmpty(p.NamaKelurahan),
-		Kecamatan:     strOrEmpty(p.Kecamatan),
-		Kabupaten:     strOrEmpty(p.Kabupaten),
-		Provinsi:      strOrEmpty(p.Provinsi),
-		FormatNomor:   strOrEmpty(p.FormatNomor),
+		NamaKelurahan:    strOrEmpty(p.NamaKelurahan),
+		Kecamatan:        strOrEmpty(p.Kecamatan),
+		Kota:             strOrEmpty(p.Kota),
+		KodeKecamatan:    strOrEmpty(p.KodeKecamatan),
+		KodeKelurahan:    strOrEmpty(p.KodeKelurahan),
+		InstansiKematian: strOrEmpty(p.InstansiKematian),
 	}
 }
 
@@ -52,16 +54,18 @@ func (h *Handler) UpdatePengaturan(w http.ResponseWriter, r *http.Request) {
 	}
 	in.NamaKelurahan = strings.TrimSpace(in.NamaKelurahan)
 	in.Kecamatan = strings.TrimSpace(in.Kecamatan)
-	in.Kabupaten = strings.TrimSpace(in.Kabupaten)
-	in.Provinsi = strings.TrimSpace(in.Provinsi)
-	in.FormatNomor = strings.TrimSpace(in.FormatNomor)
+	in.Kota = strings.TrimSpace(in.Kota)
+	in.KodeKecamatan = strings.TrimSpace(in.KodeKecamatan)
+	in.KodeKelurahan = strings.TrimSpace(in.KodeKelurahan)
+	in.InstansiKematian = strings.TrimSpace(in.InstansiKematian)
 
 	if err := h.q.UpsertPengaturan(r.Context(), db.UpsertPengaturanParams{
-		NamaKelurahan: nullStr(in.NamaKelurahan),
-		Kecamatan:     nullStr(in.Kecamatan),
-		Kabupaten:     nullStr(in.Kabupaten),
-		Provinsi:      nullStr(in.Provinsi),
-		FormatNomor:   nullStr(in.FormatNomor),
+		NamaKelurahan:    nullStr(in.NamaKelurahan),
+		Kecamatan:        nullStr(in.Kecamatan),
+		Kota:             nullStr(in.Kota),
+		KodeKecamatan:    nullStr(in.KodeKecamatan),
+		KodeKelurahan:    nullStr(in.KodeKelurahan),
+		InstansiKematian: nullStr(in.InstansiKematian),
 	}); err != nil {
 		writeErr(w, http.StatusInternalServerError, "gagal menyimpan pengaturan")
 		return

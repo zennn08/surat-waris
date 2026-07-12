@@ -15,12 +15,7 @@ var schemaSQL string
 // jika PRAGMA user_version < versinya, lalu user_version dinaikkan. Ini membuat
 // upgrade exe idempotent dan tidak menyentuh data yang sudah ada.
 var migrations = []string{
-	schemaSQL, // v1: skema awal penuh
-	// v2: tabel nomor_awal (setting nomor urut awal per tahun).
-	`CREATE TABLE IF NOT EXISTS nomor_awal (
-	    tahun       INTEGER PRIMARY KEY,
-	    urutan_awal INTEGER NOT NULL
-	);`,
+	schemaSQL, // v1: skema penuh (model v2 spek)
 }
 
 // Open membuka/membuat SQLite di path yang diberikan dengan WAL + foreign keys.

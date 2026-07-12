@@ -41,7 +41,7 @@
 
 <div class="card">
   <div class="field mb-0">
-    <input placeholder="Cari nomor surat, nama atau NIK pewaris…" bind:value={q} on:input={onSearch} />
+    <input placeholder="Cari reg. no, nama atau NIK pewaris…" bind:value={q} on:input={onSearch} />
   </div>
 </div>
 
@@ -56,7 +56,7 @@
     <table>
       <thead>
         <tr>
-          <th style="width:190px;">Nomor Surat</th>
+          <th style="width:210px;">Reg. No. Camat</th>
           <th>Pewaris (Alm.)</th>
           <th style="width:110px;">Tanggal</th>
           <th style="width:90px;">Status</th>
@@ -66,9 +66,9 @@
       <tbody>
         {#each items as b}
           <tr>
-            <td class="mono">{b.nomor_surat}</td>
+            <td class="mono">{b.reg_no_camat}</td>
             <td>{pewarisNames(b)}</td>
-            <td>{b.tanggal}</td>
+            <td>{b.tanggal_surat}</td>
             <td><span class="badge badge-green">{b.status}</span></td>
             <td class="right">
               <a class="btn btn-sm" href={'#/berkas/' + b.id}>Detail</a>

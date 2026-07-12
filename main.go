@@ -156,12 +156,13 @@ func newRouter(sqldb *sql.DB, q *db.Queries, mgr *auth.Manager) http.Handler {
 		pr.Post("/api/berkas", apiH.CreateBerkas)
 		pr.Get("/api/berkas/{id}", apiH.GetBerkas)
 
-		// Edit terbatas: HANYA penerima kuasa + harta
+		// Edit terbatas (SPEC §7.2): penerima kuasa + item kuasa + pelengkap penerima kuasa
 		pr.Put("/api/berkas/{id}/penerima-kuasa", apiH.SetPenerimaKuasa)
-		pr.Get("/api/berkas/{id}/harta", apiH.ListHarta)
-		pr.Post("/api/berkas/{id}/harta", apiH.AddHarta)
-		pr.Put("/api/berkas/{id}/harta/{hartaId}", apiH.UpdateHarta)
-		pr.Delete("/api/berkas/{id}/harta/{hartaId}", apiH.DeleteHarta)
+		pr.Put("/api/berkas/{id}/ahli-waris/{ahliId}/pelengkap", apiH.UpdateAhliWarisPelengkap)
+		pr.Get("/api/berkas/{id}/kuasa", apiH.ListKuasa)
+		pr.Post("/api/berkas/{id}/kuasa", apiH.AddKuasa)
+		pr.Put("/api/berkas/{id}/kuasa/{kuasaId}", apiH.UpdateKuasa)
+		pr.Delete("/api/berkas/{id}/kuasa/{kuasaId}", apiH.DeleteKuasa)
 
 		// Halaman cetak (html/template, A4) — dibuka di tab baru.
 		pr.Get("/berkas/{id}/cetak", apiH.Cetak)

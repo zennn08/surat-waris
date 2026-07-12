@@ -22,10 +22,13 @@ import (
 
 type berkasView struct {
 	ID                       int64  `json:"id"`
-	NomorSurat               string `json:"nomor_surat"`
 	Tahun                    int64  `json:"tahun"`
 	Urutan                   int64  `json:"urutan"`
-	Tanggal                  string `json:"tanggal"`
+	RegNoCamat               string `json:"reg_no_camat"`
+	RegNoLurah               string `json:"reg_no_lurah"`
+	TanggalRegCamat          string `json:"tanggal_reg_camat"`
+	TanggalRegLurah          string `json:"tanggal_reg_lurah"`
+	TanggalSurat             string `json:"tanggal_surat"`
 	TempatTinggalPewaris     string `json:"tempat_tinggal_pewaris"`
 	PenerimaKuasaAhliWarisID *int64 `json:"penerima_kuasa_ahli_waris_id"`
 	Status                   string `json:"status"`
@@ -36,10 +39,13 @@ type berkasView struct {
 func toBerkasView(b db.BerkasWaris) berkasView {
 	v := berkasView{
 		ID:                   b.ID,
-		NomorSurat:           b.NomorSurat,
 		Tahun:                b.Tahun,
 		Urutan:               b.Urutan,
-		Tanggal:              b.Tanggal,
+		RegNoCamat:           b.RegNoCamat,
+		RegNoLurah:           b.RegNoLurah,
+		TanggalRegCamat:      strOrEmpty(b.TanggalRegCamat),
+		TanggalRegLurah:      strOrEmpty(b.TanggalRegLurah),
+		TanggalSurat:         b.TanggalSurat,
 		TempatTinggalPewaris: b.TempatTinggalPewaris,
 		Status:               b.Status,
 		CreatedAt:            b.CreatedAt,
@@ -54,15 +60,19 @@ func toBerkasView(b db.BerkasWaris) berkasView {
 
 type pewarisView struct {
 	ID               int64  `json:"id"`
+	Urutan           int64  `json:"urutan"`
 	Nama             string `json:"nama"`
 	Nik              string `json:"nik"`
+	Status           string `json:"status"`
 	TglMeninggal     string `json:"tgl_meninggal"`
+	InstansiKematian string `json:"instansi_kematian"`
 	NoSuratKematian  string `json:"no_surat_kematian"`
 	TglSuratKematian string `json:"tgl_surat_kematian"`
 }
 
 type ahliWarisView struct {
 	ID           int64  `json:"id"`
+	Urutan       int64  `json:"urutan"`
 	Nama         string `json:"nama"`
 	Nik          string `json:"nik"`
 	Umur         *int64 `json:"umur"`
@@ -70,19 +80,25 @@ type ahliWarisView struct {
 	Agama        string `json:"agama"`
 	Alamat       string `json:"alamat"`
 	Keterangan   string `json:"keterangan"`
+	TempatLahir  string `json:"tempat_lahir"`
+	TglLahir     string `json:"tgl_lahir"`
+	Pekerjaan    string `json:"pekerjaan"`
 }
 
 type saksiView struct {
-	ID       int64  `json:"id"`
-	Nama     string `json:"nama"`
-	Ttl      string `json:"ttl"`
-	Alamat   string `json:"alamat"`
-	Nik      string `json:"nik"`
-	Hubungan string `json:"hubungan"`
+	ID          int64  `json:"id"`
+	Urutan      int64  `json:"urutan"`
+	Nama        string `json:"nama"`
+	TempatLahir string `json:"tempat_lahir"`
+	TglLahir    string `json:"tgl_lahir"`
+	Alamat      string `json:"alamat"`
+	Nik         string `json:"nik"`
+	Hubungan    string `json:"hubungan"`
 }
 
-type hartaView struct {
+type kuasaView struct {
 	ID        int64  `json:"id"`
+	Urutan    int64  `json:"urutan"`
 	Deskripsi string `json:"deskripsi"`
 }
 
@@ -91,7 +107,7 @@ type berkasDetail struct {
 	Pewaris   []pewarisView   `json:"pewaris"`
 	AhliWaris []ahliWarisView `json:"ahli_waris"`
 	Saksi     []saksiView     `json:"saksi"`
-	Harta     []hartaView     `json:"harta"`
+	Kuasa     []kuasaView     `json:"kuasa"`
 }
 
 // berkasListItem = ringkas untuk daftar berkas.
@@ -105,7 +121,9 @@ type berkasListItem struct {
 type pewarisInput struct {
 	Nama             string `json:"nama"`
 	Nik              string `json:"nik"`
+	Status           string `json:"status"` // 'suami' | 'istri'
 	TglMeninggal     string `json:"tgl_meninggal"`
+	InstansiKematian string `json:"instansi_kematian"`
 	NoSuratKematian  string `json:"no_surat_kematian"`
 	TglSuratKematian string `json:"tgl_surat_kematian"`
 }
@@ -118,30 +136,34 @@ type ahliWarisInput struct {
 	Agama        string `json:"agama"`
 	Alamat       string `json:"alamat"`
 	Keterangan   string `json:"keterangan"`
+	TempatLahir  string `json:"tempat_lahir"`
+	TglLahir     string `json:"tgl_lahir"`
+	Pekerjaan    string `json:"pekerjaan"`
 }
 
 type saksiInput struct {
-	Nama     string `json:"nama"`
-	Ttl      string `json:"ttl"`
-	Alamat   string `json:"alamat"`
-	Nik      string `json:"nik"`
-	Hubungan string `json:"hubungan"`
+	Nama        string `json:"nama"`
+	TempatLahir string `json:"tempat_lahir"`
+	TglLahir    string `json:"tgl_lahir"`
+	Alamat      string `json:"alamat"`
+	Nik         string `json:"nik"`
+	Hubungan    string `json:"hubungan"`
 }
 
 type createBerkasReq struct {
-	Tanggal              string           `json:"tanggal"`
+	TanggalSurat         string           `json:"tanggal_surat"`
 	TempatTinggalPewaris string           `json:"tempat_tinggal_pewaris"`
 	Pewaris              []pewarisInput   `json:"pewaris"`
 	AhliWaris            []ahliWarisInput `json:"ahli_waris"`
 	Saksi                []saksiInput     `json:"saksi"`
 	PenerimaKuasaIndex   *int             `json:"penerima_kuasa_index"`
-	Harta                []string         `json:"harta"`
+	Kuasa                []string         `json:"kuasa"`
 }
 
 func (r *createBerkasReq) validate() (time.Time, error) {
-	tgl, err := time.Parse("2006-01-02", strings.TrimSpace(r.Tanggal))
+	tgl, err := time.Parse("2006-01-02", strings.TrimSpace(r.TanggalSurat))
 	if err != nil {
-		return time.Time{}, errors.New("tanggal tidak valid (format YYYY-MM-DD)")
+		return time.Time{}, errors.New("tanggal surat tidak valid (format YYYY-MM-DD)")
 	}
 	if strings.TrimSpace(r.TempatTinggalPewaris) == "" {
 		return time.Time{}, errors.New("tempat tinggal pewaris wajib diisi")
@@ -152,6 +174,10 @@ func (r *createBerkasReq) validate() (time.Time, error) {
 	for i, p := range r.Pewaris {
 		if strings.TrimSpace(p.Nama) == "" || strings.TrimSpace(p.Nik) == "" {
 			return time.Time{}, fmt.Errorf("pewaris #%d: nama dan NIK wajib diisi", i+1)
+		}
+		st := strings.ToLower(strings.TrimSpace(p.Status))
+		if st != "suami" && st != "istri" {
+			return time.Time{}, fmt.Errorf("pewaris #%d: status harus 'suami' atau 'istri'", i+1)
 		}
 		if strings.TrimSpace(p.TglMeninggal) == "" || strings.TrimSpace(p.NoSuratKematian) == "" || strings.TrimSpace(p.TglSuratKematian) == "" {
 			return time.Time{}, fmt.Errorf("pewaris #%d: tanggal meninggal, no & tgl surat kematian wajib diisi", i+1)
@@ -216,9 +242,15 @@ func (h *Handler) CreateBerkas(w http.ResponseWriter, r *http.Request) {
 }
 
 // lockError menandai NIK pewaris yang sudah pernah dibuatkan surat.
-type lockError struct{ nik string }
+type lockError struct {
+	nik      string
+	regCamat string
+}
 
 func (e lockError) Error() string {
+	if e.regCamat != "" {
+		return fmt.Sprintf("Pewaris dengan NIK %s sudah pernah dibuatkan Surat Keterangan Ahli Waris (Reg. No. %s).", e.nik, e.regCamat)
+	}
 	return fmt.Sprintf("Pewaris dengan NIK %s sudah pernah dibuatkan Surat Keterangan Ahli Waris.", e.nik)
 }
 
@@ -232,18 +264,17 @@ func (h *Handler) createBerkasTx(ctx context.Context, req createBerkasReq, tgl t
 
 	// 1. Enforce lock: cek tiap NIK pewaris.
 	for _, p := range req.Pewaris {
-		n, err := qtx.CountPewarisByNik(ctx, strings.TrimSpace(p.Nik))
+		nik := strings.TrimSpace(p.Nik)
+		n, err := qtx.CountPewarisByNik(ctx, nik)
 		if err != nil {
 			return 0, err
 		}
 		if n > 0 {
-			return 0, lockError{nik: strings.TrimSpace(p.Nik)}
+			return 0, lockError{nik: nik, regCamat: h.lookupRegByPewarisNik(ctx, qtx, nik)}
 		}
 	}
 
-	// 2. Generate nomor: urutan per tahun + template pengaturan.
-	// urutan = max(MAX(existing)+1, urutan_awal+1) — hormati nomor urut awal
-	// (migrasi manual→digital) tanpa menabrak berkas yang sudah ada.
+	// 2. Generate urutan per tahun (hormati nomor urut awal migrasi manual→digital).
 	tahun := int64(tgl.Year())
 	urutan, err := qtx.NextUrutan(ctx, tahun)
 	if err != nil {
@@ -260,20 +291,18 @@ func (h *Handler) createBerkasTx(ctx context.Context, req createBerkasReq, tgl t
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return 0, err
 	}
-	nomor := surat.FormatNomor(strOrEmpty(peng.FormatNomor), surat.NomorData{
-		Urutan:    int(urutan),
-		Bulan:     int(tgl.Month()),
-		Tahun:     int(tahun),
-		Kelurahan: strOrEmpty(peng.NamaKelurahan),
-		Kecamatan: strOrEmpty(peng.Kecamatan),
-	})
+	kodeKec := strOrEmpty(peng.KodeKecamatan)
+	kodeKel := strOrEmpty(peng.KodeKelurahan)
+	regCamat := surat.RegNoCamat(int(urutan), int(tahun), kodeKec)
+	regLurah := surat.RegNoLurah(int(urutan), int(tahun), kodeKel, kodeKec)
 
 	// 3. Buat berkas.
 	b, err := qtx.CreateBerkas(ctx, db.CreateBerkasParams{
-		NomorSurat:           nomor,
 		Tahun:                tahun,
 		Urutan:               urutan,
-		Tanggal:              tgl.Format("2006-01-02"),
+		RegNoCamat:           regCamat,
+		RegNoLurah:           regLurah,
+		TanggalSurat:         tgl.Format("2006-01-02"),
 		TempatTinggalPewaris: strings.TrimSpace(req.TempatTinggalPewaris),
 		CreatedBy:            sql.NullInt64{Int64: uid, Valid: uid != 0},
 	})
@@ -281,13 +310,22 @@ func (h *Handler) createBerkasTx(ctx context.Context, req createBerkasReq, tgl t
 		return 0, err
 	}
 
-	// 4. Pewaris (UNIQUE nik = pengaman lock tingkat DB).
-	for _, p := range req.Pewaris {
+	// 4. Pewaris (UNIQUE nik = pengaman lock tingkat DB). instansi_kematian
+	// default dari pengaturan bila kosong.
+	defaultInstansi := strOrEmpty(peng.InstansiKematian)
+	for i, p := range req.Pewaris {
+		instansi := strings.TrimSpace(p.InstansiKematian)
+		if instansi == "" {
+			instansi = defaultInstansi
+		}
 		if _, err := qtx.CreatePewaris(ctx, db.CreatePewarisParams{
 			BerkasID:         b.ID,
+			Urutan:           int64(i + 1),
 			Nama:             strings.TrimSpace(p.Nama),
 			Nik:              strings.TrimSpace(p.Nik),
+			Status:           strings.ToLower(strings.TrimSpace(p.Status)),
 			TglMeninggal:     strings.TrimSpace(p.TglMeninggal),
+			InstansiKematian: instansi,
 			NoSuratKematian:  strings.TrimSpace(p.NoSuratKematian),
 			TglSuratKematian: strings.TrimSpace(p.TglSuratKematian),
 		}); err != nil {
@@ -297,9 +335,10 @@ func (h *Handler) createBerkasTx(ctx context.Context, req createBerkasReq, tgl t
 
 	// 5. Ahli waris — simpan ID untuk resolusi penerima kuasa.
 	ahliIDs := make([]int64, 0, len(req.AhliWaris))
-	for _, a := range req.AhliWaris {
+	for i, a := range req.AhliWaris {
 		created, err := qtx.CreateAhliWaris(ctx, db.CreateAhliWarisParams{
 			BerkasID:     b.ID,
+			Urutan:       int64(i + 1),
 			Nama:         strings.TrimSpace(a.Nama),
 			Nik:          strings.TrimSpace(a.Nik),
 			Umur:         nullInt(a.Umur),
@@ -307,6 +346,9 @@ func (h *Handler) createBerkasTx(ctx context.Context, req createBerkasReq, tgl t
 			Agama:        nullStr(strings.TrimSpace(a.Agama)),
 			Alamat:       nullStr(strings.TrimSpace(a.Alamat)),
 			Keterangan:   nullStr(strings.TrimSpace(a.Keterangan)),
+			TempatLahir:  nullStr(strings.TrimSpace(a.TempatLahir)),
+			TglLahir:     nullStr(strings.TrimSpace(a.TglLahir)),
+			Pekerjaan:    nullStr(strings.TrimSpace(a.Pekerjaan)),
 		})
 		if err != nil {
 			return 0, err
@@ -315,26 +357,30 @@ func (h *Handler) createBerkasTx(ctx context.Context, req createBerkasReq, tgl t
 	}
 
 	// 6. Saksi.
-	for _, s := range req.Saksi {
+	for i, s := range req.Saksi {
 		if err := qtx.CreateSaksi(ctx, db.CreateSaksiParams{
-			BerkasID: b.ID,
-			Nama:     strings.TrimSpace(s.Nama),
-			Ttl:      nullStr(strings.TrimSpace(s.Ttl)),
-			Alamat:   nullStr(strings.TrimSpace(s.Alamat)),
-			Nik:      nullStr(strings.TrimSpace(s.Nik)),
-			Hubungan: nullStr(strings.TrimSpace(s.Hubungan)),
+			BerkasID:    b.ID,
+			Urutan:      int64(i + 1),
+			Nama:        strings.TrimSpace(s.Nama),
+			TempatLahir: nullStr(strings.TrimSpace(s.TempatLahir)),
+			TglLahir:    nullStr(strings.TrimSpace(s.TglLahir)),
+			Alamat:      nullStr(strings.TrimSpace(s.Alamat)),
+			Nik:         nullStr(strings.TrimSpace(s.Nik)),
+			Hubungan:    nullStr(strings.TrimSpace(s.Hubungan)),
 		}); err != nil {
 			return 0, err
 		}
 	}
 
-	// 7. Harta.
-	for _, d := range req.Harta {
+	// 7. Item kuasa.
+	urut := 0
+	for _, d := range req.Kuasa {
 		d = strings.TrimSpace(d)
 		if d == "" {
 			continue
 		}
-		if _, err := qtx.CreateHarta(ctx, db.CreateHartaParams{BerkasID: b.ID, Deskripsi: d}); err != nil {
+		urut++
+		if _, err := qtx.CreateKuasaItem(ctx, db.CreateKuasaItemParams{BerkasID: b.ID, Urutan: int64(urut), Deskripsi: d}); err != nil {
 			return 0, err
 		}
 	}
@@ -353,6 +399,16 @@ func (h *Handler) createBerkasTx(ctx context.Context, req createBerkasReq, tgl t
 		return 0, err
 	}
 	return b.ID, nil
+}
+
+// lookupRegByPewarisNik mencari reg_no_camat berkas yang memuat NIK pewaris ini
+// (best effort untuk pesan lock; abaikan error).
+func (h *Handler) lookupRegByPewarisNik(ctx context.Context, q *db.Queries, nik string) string {
+	rows, err := q.SearchBerkas(ctx, nullStr(nik))
+	if err != nil || len(rows) == 0 {
+		return ""
+	}
+	return rows[0].RegNoCamat
 }
 
 // ListBerkas: GET /api/berkas?q=...
@@ -400,8 +456,7 @@ func (h *Handler) GetBerkas(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, detail)
 }
 
-// loadDetail memuat berkas + semua anak. Menerima *db.Queries agar bisa dipakai
-// baik di luar maupun (jika perlu) di dalam transaksi.
+// loadDetail memuat berkas + semua anak.
 func (h *Handler) loadDetail(ctx context.Context, q *db.Queries, id int64) (berkasDetail, error) {
 	b, err := q.GetBerkas(ctx, id)
 	if err != nil {
@@ -419,7 +474,7 @@ func (h *Handler) loadDetail(ctx context.Context, q *db.Queries, id int64) (berk
 	if err != nil {
 		return berkasDetail{}, err
 	}
-	ht, err := q.ListHartaByBerkas(ctx, id)
+	ki, err := q.ListKuasaItemByBerkas(ctx, id)
 	if err != nil {
 		return berkasDetail{}, err
 	}
@@ -428,7 +483,7 @@ func (h *Handler) loadDetail(ctx context.Context, q *db.Queries, id int64) (berk
 		Pewaris:    toPewarisViews(pw),
 		AhliWaris:  toAhliWarisViews(aw),
 		Saksi:      toSaksiViews(sk),
-		Harta:      toHartaViews(ht),
+		Kuasa:      toKuasaViews(ki),
 	}, nil
 }
 
@@ -438,8 +493,9 @@ func toPewarisViews(rows []db.Pewaris) []pewarisView {
 	out := make([]pewarisView, 0, len(rows))
 	for _, p := range rows {
 		out = append(out, pewarisView{
-			ID: p.ID, Nama: p.Nama, Nik: p.Nik,
-			TglMeninggal: p.TglMeninggal, NoSuratKematian: p.NoSuratKematian, TglSuratKematian: p.TglSuratKematian,
+			ID: p.ID, Urutan: p.Urutan, Nama: p.Nama, Nik: p.Nik, Status: p.Status,
+			TglMeninggal: p.TglMeninggal, InstansiKematian: p.InstansiKematian,
+			NoSuratKematian: p.NoSuratKematian, TglSuratKematian: p.TglSuratKematian,
 		})
 	}
 	return out
@@ -449,9 +505,11 @@ func toAhliWarisViews(rows []db.AhliWaris) []ahliWarisView {
 	out := make([]ahliWarisView, 0, len(rows))
 	for _, a := range rows {
 		v := ahliWarisView{
-			ID: a.ID, Nama: a.Nama, Nik: a.Nik,
+			ID: a.ID, Urutan: a.Urutan, Nama: a.Nama, Nik: a.Nik,
 			JenisKelamin: strOrEmpty(a.JenisKelamin), Agama: strOrEmpty(a.Agama),
 			Alamat: strOrEmpty(a.Alamat), Keterangan: strOrEmpty(a.Keterangan),
+			TempatLahir: strOrEmpty(a.TempatLahir), TglLahir: strOrEmpty(a.TglLahir),
+			Pekerjaan: strOrEmpty(a.Pekerjaan),
 		}
 		if a.Umur.Valid {
 			u := a.Umur.Int64
@@ -466,17 +524,18 @@ func toSaksiViews(rows []db.Saksi) []saksiView {
 	out := make([]saksiView, 0, len(rows))
 	for _, s := range rows {
 		out = append(out, saksiView{
-			ID: s.ID, Nama: s.Nama, Ttl: strOrEmpty(s.Ttl),
+			ID: s.ID, Urutan: s.Urutan, Nama: s.Nama,
+			TempatLahir: strOrEmpty(s.TempatLahir), TglLahir: strOrEmpty(s.TglLahir),
 			Alamat: strOrEmpty(s.Alamat), Nik: strOrEmpty(s.Nik), Hubungan: strOrEmpty(s.Hubungan),
 		})
 	}
 	return out
 }
 
-func toHartaViews(rows []db.Harta) []hartaView {
-	out := make([]hartaView, 0, len(rows))
-	for _, h := range rows {
-		out = append(out, hartaView{ID: h.ID, Deskripsi: h.Deskripsi})
+func toKuasaViews(rows []db.KuasaItem) []kuasaView {
+	out := make([]kuasaView, 0, len(rows))
+	for _, k := range rows {
+		out = append(out, kuasaView{ID: k.ID, Urutan: k.Urutan, Deskripsi: k.Deskripsi})
 	}
 	return out
 }

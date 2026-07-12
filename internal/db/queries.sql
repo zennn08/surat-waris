@@ -30,7 +30,7 @@ WHERE id = ?;
 -- ============================================================
 
 -- name: GetPengaturan :one
-SELECT id, nama_kelurahan, kecamatan, kabupaten, provinsi, format_nomor
+SELECT id, nama_kelurahan, kecamatan, kota, kode_kecamatan, kode_kelurahan, instansi_kematian
 FROM pengaturan
 WHERE id = 1;
 
@@ -38,14 +38,15 @@ WHERE id = 1;
 INSERT OR IGNORE INTO pengaturan (id) VALUES (1);
 
 -- name: UpsertPengaturan :exec
-INSERT INTO pengaturan (id, nama_kelurahan, kecamatan, kabupaten, provinsi, format_nomor)
-VALUES (1, ?, ?, ?, ?, ?)
+INSERT INTO pengaturan (id, nama_kelurahan, kecamatan, kota, kode_kecamatan, kode_kelurahan, instansi_kematian)
+VALUES (1, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(id) DO UPDATE SET
-    nama_kelurahan = excluded.nama_kelurahan,
-    kecamatan      = excluded.kecamatan,
-    kabupaten      = excluded.kabupaten,
-    provinsi       = excluded.provinsi,
-    format_nomor   = excluded.format_nomor;
+    nama_kelurahan    = excluded.nama_kelurahan,
+    kecamatan         = excluded.kecamatan,
+    kota              = excluded.kota,
+    kode_kecamatan    = excluded.kode_kecamatan,
+    kode_kelurahan    = excluded.kode_kelurahan,
+    instansi_kematian = excluded.instansi_kematian;
 
 -- ============================================================
 -- PEJABAT (Lurah / Camat)
@@ -107,33 +108,38 @@ ON CONFLICT(tahun) DO UPDATE SET urutan_awal = excluded.urutan_awal;
 DELETE FROM nomor_awal WHERE tahun = ?;
 
 -- name: CreateBerkas :one
-INSERT INTO berkas_waris (nomor_surat, tahun, urutan, tanggal, tempat_tinggal_pewaris, created_by)
-VALUES (?, ?, ?, ?, ?, ?)
-RETURNING id, nomor_surat, tahun, urutan, tanggal, tempat_tinggal_pewaris,
-          penerima_kuasa_ahli_waris_id, status, created_by, created_at, updated_at;
+INSERT INTO berkas_waris (tahun, urutan, reg_no_camat, reg_no_lurah, tanggal_surat, tempat_tinggal_pewaris, created_by)
+VALUES (?, ?, ?, ?, ?, ?, ?)
+RETURNING id, tahun, urutan, reg_no_camat, reg_no_lurah, tanggal_reg_camat, tanggal_reg_lurah,
+          tanggal_surat, tempat_tinggal_pewaris, penerima_kuasa_ahli_waris_id, status,
+          created_by, created_at, updated_at;
 
 -- name: GetBerkas :one
-SELECT id, nomor_surat, tahun, urutan, tanggal, tempat_tinggal_pewaris,
-       penerima_kuasa_ahli_waris_id, status, created_by, created_at, updated_at
+SELECT id, tahun, urutan, reg_no_camat, reg_no_lurah, tanggal_reg_camat, tanggal_reg_lurah,
+       tanggal_surat, tempat_tinggal_pewaris, penerima_kuasa_ahli_waris_id, status,
+       created_by, created_at, updated_at
 FROM berkas_waris
 WHERE id = ?;
 
 -- name: ListBerkas :many
-SELECT id, nomor_surat, tahun, urutan, tanggal, tempat_tinggal_pewaris,
-       penerima_kuasa_ahli_waris_id, status, created_by, created_at, updated_at
+SELECT id, tahun, urutan, reg_no_camat, reg_no_lurah, tanggal_reg_camat, tanggal_reg_lurah,
+       tanggal_surat, tempat_tinggal_pewaris, penerima_kuasa_ahli_waris_id, status,
+       created_by, created_at, updated_at
 FROM berkas_waris
 ORDER BY created_at DESC;
 
 -- name: SearchBerkas :many
-SELECT b.id, b.nomor_surat, b.tahun, b.urutan, b.tanggal, b.tempat_tinggal_pewaris,
-       b.penerima_kuasa_ahli_waris_id, b.status, b.created_by, b.created_at, b.updated_at
+SELECT b.id, b.tahun, b.urutan, b.reg_no_camat, b.reg_no_lurah, b.tanggal_reg_camat, b.tanggal_reg_lurah,
+       b.tanggal_surat, b.tempat_tinggal_pewaris, b.penerima_kuasa_ahli_waris_id, b.status,
+       b.created_by, b.created_at, b.updated_at
 FROM berkas_waris b
 WHERE EXISTS (
     SELECT 1 FROM pewaris p
     WHERE p.berkas_id = b.id
       AND (p.nama LIKE '%' || ?1 || '%' OR p.nik LIKE '%' || ?1 || '%')
 )
-OR b.nomor_surat LIKE '%' || ?1 || '%'
+OR b.reg_no_camat LIKE '%' || ?1 || '%'
+OR b.reg_no_lurah LIKE '%' || ?1 || '%'
 ORDER BY b.created_at DESC;
 
 -- name: SetBerkasPenerimaKuasa :exec
@@ -149,61 +155,66 @@ UPDATE berkas_waris SET updated_at = datetime('now') WHERE id = ?;
 SELECT COUNT(*) FROM pewaris WHERE nik = ?;
 
 -- name: CreatePewaris :one
-INSERT INTO pewaris (berkas_id, nama, nik, tgl_meninggal, no_surat_kematian, tgl_surat_kematian)
-VALUES (?, ?, ?, ?, ?, ?)
-RETURNING id, berkas_id, nama, nik, tgl_meninggal, no_surat_kematian, tgl_surat_kematian;
+INSERT INTO pewaris (berkas_id, urutan, nama, nik, status, tgl_meninggal, instansi_kematian, no_surat_kematian, tgl_surat_kematian)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, berkas_id, urutan, nama, nik, status, tgl_meninggal, instansi_kematian, no_surat_kematian, tgl_surat_kematian;
 
 -- name: ListPewarisByBerkas :many
-SELECT id, berkas_id, nama, nik, tgl_meninggal, no_surat_kematian, tgl_surat_kematian
+SELECT id, berkas_id, urutan, nama, nik, status, tgl_meninggal, instansi_kematian, no_surat_kematian, tgl_surat_kematian
 FROM pewaris
 WHERE berkas_id = ?
-ORDER BY id;
+ORDER BY urutan, id;
 
 -- AHLI WARIS
 -- name: CreateAhliWaris :one
-INSERT INTO ahli_waris (berkas_id, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, berkas_id, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan;
+INSERT INTO ahli_waris (berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, tempat_lahir, tgl_lahir, pekerjaan)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, tempat_lahir, tgl_lahir, pekerjaan;
 
 -- name: ListAhliWarisByBerkas :many
-SELECT id, berkas_id, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan
+SELECT id, berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, tempat_lahir, tgl_lahir, pekerjaan
 FROM ahli_waris
 WHERE berkas_id = ?
-ORDER BY id;
+ORDER BY urutan, id;
 
 -- name: GetAhliWaris :one
-SELECT id, berkas_id, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan
+SELECT id, berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, tempat_lahir, tgl_lahir, pekerjaan
 FROM ahli_waris
 WHERE id = ?;
 
+-- name: UpdateAhliWarisPelengkap :exec
+UPDATE ahli_waris
+SET tempat_lahir = ?, tgl_lahir = ?, pekerjaan = ?
+WHERE id = ? AND berkas_id = ?;
+
 -- SAKSI
 -- name: CreateSaksi :exec
-INSERT INTO saksi (berkas_id, nama, ttl, alamat, nik, hubungan)
-VALUES (?, ?, ?, ?, ?, ?);
+INSERT INTO saksi (berkas_id, urutan, nama, tempat_lahir, tgl_lahir, alamat, nik, hubungan)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 -- name: ListSaksiByBerkas :many
-SELECT id, berkas_id, nama, ttl, alamat, nik, hubungan
+SELECT id, berkas_id, urutan, nama, tempat_lahir, tgl_lahir, alamat, nik, hubungan
 FROM saksi
 WHERE berkas_id = ?
-ORDER BY id;
+ORDER BY urutan, id;
 
--- HARTA (editable)
--- name: CreateHarta :one
-INSERT INTO harta (berkas_id, deskripsi)
-VALUES (?, ?)
-RETURNING id, berkas_id, deskripsi;
+-- KUASA ITEM (editable)
+-- name: CreateKuasaItem :one
+INSERT INTO kuasa_item (berkas_id, urutan, deskripsi)
+VALUES (?, ?, ?)
+RETURNING id, berkas_id, urutan, deskripsi;
 
--- name: GetHarta :one
-SELECT id, berkas_id, deskripsi FROM harta WHERE id = ?;
+-- name: GetKuasaItem :one
+SELECT id, berkas_id, urutan, deskripsi FROM kuasa_item WHERE id = ?;
 
--- name: ListHartaByBerkas :many
-SELECT id, berkas_id, deskripsi
-FROM harta
+-- name: ListKuasaItemByBerkas :many
+SELECT id, berkas_id, urutan, deskripsi
+FROM kuasa_item
 WHERE berkas_id = ?
-ORDER BY id;
+ORDER BY urutan, id;
 
--- name: UpdateHarta :exec
-UPDATE harta SET deskripsi = ? WHERE id = ?;
+-- name: UpdateKuasaItem :exec
+UPDATE kuasa_item SET deskripsi = ? WHERE id = ?;
 
--- name: DeleteHarta :exec
-DELETE FROM harta WHERE id = ?;
+-- name: DeleteKuasaItem :exec
+DELETE FROM kuasa_item WHERE id = ?;

@@ -2,12 +2,12 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<title>Cetak Surat — {{.B.NomorSurat}}</title>
+<title>Cetak Surat — {{.B.RegNoCamat}}</title>
 <style>
   * { box-sizing: border-box; }
   body {
     font-family: 'Times New Roman', Times, serif;
-    font-size: 12pt; line-height: 1.5; color: #000; margin: 0; background: #e5e7eb;
+    font-size: 12pt; line-height: 1.4; color: #000; margin: 0; background: #e5e7eb;
   }
   .toolbar {
     position: fixed; top: 0; left: 0; right: 0; z-index: 10;
@@ -19,37 +19,52 @@
   .toolbar .muted { color: #cbd5e1; margin-left: auto; }
 
   .surat { background: #fff; }
-  .judul { text-align: center; font-weight: bold; text-decoration: underline; font-size: 13pt; text-transform: uppercase; margin-bottom: 2pt; }
-  .nomor { text-align: center; margin-bottom: 16pt; }
-  .isi p { text-align: justify; margin: 6pt 0; }
-  .placeholder { color: #9a3412; font-style: italic; }
+  .judul { text-align: center; font-weight: bold; text-decoration: underline; font-size: 13pt; text-transform: uppercase; margin-bottom: 12pt; }
+  .isi p { text-align: justify; margin: 7pt 0; }
 
-  table.data { margin: 6pt 0 6pt 18pt; }
+  /* tabel data key : value (blok penerima kuasa) */
+  table.data { margin: 4pt 0 4pt 24pt; }
   table.data td { padding: 1pt 6pt 1pt 0; vertical-align: top; }
-  table.data td.k { width: 190px; }
+  table.data td.k { width: 210px; }
   table.data td.s { width: 12px; }
 
+  /* tabel ahli waris bergaris penuh */
   table.tbl { width: 100%; border-collapse: collapse; margin: 8pt 0; font-size: 11pt; }
   table.tbl th, table.tbl td { border: 1px solid #000; padding: 3pt 5pt; vertical-align: top; }
-  table.tbl th { background: #eee; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  table.tbl th { background: #eee; -webkit-print-color-adjust: exact; print-color-adjust: exact; text-align: center; }
   table.tbl td.c { text-align: center; }
 
-  .ttd-area { margin-top: 20pt; }
-  .ttd-parties { display: flex; flex-wrap: wrap; gap: 8pt 24pt; margin-bottom: 14pt; }
-  .sig-block { flex: 1 1 45%; min-width: 45%; }
-  .sig-heading { font-weight: bold; margin-bottom: 4pt; }
-  .sig-grid { display: flex; flex-wrap: wrap; gap: 6pt 20pt; }
-  .sig { flex: 1 1 40%; min-width: 40%; margin-bottom: 8pt; }
-  .sig-role { }
-  .sig-space { height: 42pt; }
-  .sig-space-lg { height: 52pt; }
-  .sig-name-strong { font-weight: bold; text-decoration: underline; }
-  .sig-nip { }
+  /* daftar bernomor nama */
+  ol.nama { margin: 4pt 0 4pt 24pt; padding: 0; }
+  ol.nama li { margin: 2pt 0; }
 
-  .tgl-line { text-align: right; margin: 4pt 0 2pt; }
-  .sig-pejabat { display: flex; justify-content: space-between; gap: 24pt; }
-  .sig-pejabat.right-only { justify-content: flex-end; }
-  .sig-pejabat .sig { flex: 0 0 45%; text-align: center; }
+  /* blok saksi 2 kolom */
+  table.saksi2 { width: 100%; margin: 6pt 0; font-size: 11pt; border-collapse: collapse; }
+  table.saksi2 td { vertical-align: top; padding: 1pt 4pt 1pt 0; }
+  table.saksi2 td.no { width: 16px; }
+  table.saksi2 td.lbl { width: 120px; }
+  table.saksi2 td.c { width: 10px; }
+  table.saksi2 td.gap { width: 28px; }
+
+  /* blok tanda tangan 2 kolom */
+  .ttd2 { display: flex; justify-content: space-between; gap: 24pt; margin-top: 8pt; }
+  .ttd2 .col { flex: 1 1 48%; }
+  .ttd2 .col.right { text-align: left; }
+  .signrow { margin-bottom: 34pt; }
+  .sp { height: 34pt; }
+  .sp-lg { height: 48pt; }
+  .strong-name { font-weight: bold; text-decoration: underline; }
+  .rk { text-align: right; margin: 8pt 0; }
+
+  .garis { border-top: 3px double #000; margin: 12pt 0 8pt; }
+
+  /* blok pejabat */
+  .pejabat2 { display: flex; justify-content: space-between; gap: 24pt; margin-top: 6pt; }
+  .pejabat2 .col { flex: 0 0 46%; }
+  .pejabat1 { display: flex; justify-content: center; margin-top: 6pt; }
+  .pejabat1 .col { flex: 0 0 46%; text-align: center; }
+  .pejabat2 .jab, .pejabat1 .jab { margin-top: 2pt; }
+  .pejabat2 .col.tengah { text-align: left; }
 
   @media screen {
     body { padding: 60px 0 40px; }
@@ -68,236 +83,263 @@
 <div class="toolbar">
   <button class="print" onclick="window.print()">🖨 Cetak / Simpan PDF</button>
   <button onclick="window.close()">Tutup</button>
-  <span class="muted">Ukuran A4 · Times New Roman 12pt · 3 surat = 3 halaman</span>
+  <span class="muted">A4 · Times New Roman · 3 surat = 3 halaman</span>
 </div>
 
 {{/* ============ SURAT 1: KETERANGAN AHLI WARIS ============ */}}
 <section class="surat">
-  <div class="judul">Surat Keterangan Ahli Waris</div>
-  <div class="nomor">Nomor: {{.B.NomorSurat}}</div>
+  <div class="judul">SURAT KETERANGAN AHLI WARIS</div>
 
   <div class="isi">
-    <p class="placeholder">[NARASI PEMBUKA — isi sesuai blangko resmi kelurahan.]</p>
-    <p>Yang bertanda tangan di bawah ini menerangkan bahwa telah meninggal dunia:</p>
-    {{range .B.Pewaris}}
-    <table class="data">
-      <tr><td class="k">Nama</td><td class="s">:</td><td>{{.Nama}}</td></tr>
-      <tr><td class="k">NIK</td><td class="s">:</td><td>{{.Nik}}</td></tr>
-      <tr><td class="k">Tanggal Meninggal</td><td class="s">:</td><td>{{tglID .TglMeninggal}}</td></tr>
-      <tr><td class="k">No. Surat Kematian</td><td class="s">:</td><td>{{.NoSuratKematian}}</td></tr>
-      <tr><td class="k">Tgl. Surat Kematian</td><td class="s">:</td><td>{{tglID .TglSuratKematian}}</td></tr>
-    </table>
-    {{end}}
-    <p>Bertempat tinggal terakhir di {{.B.TempatTinggalPewaris}}.</p>
-    <p class="placeholder">[NARASI — isi sesuai blangko.]</p>
-    <p>Almarhum/almarhumah meninggalkan ahli waris sebagai berikut:</p>
-    <table class="tbl">
-      <thead>
-        <tr><th>No</th><th>Nama</th><th>NIK</th><th>Umur</th><th>L/P</th><th>Agama</th><th>Alamat</th><th>Keterangan</th></tr>
-      </thead>
-      <tbody>
-        {{range $i, $a := .B.AhliWaris}}
-        <tr>
-          <td class="c">{{add $i 1}}</td>
-          <td>{{$a.Nama}}</td>
-          <td>{{$a.Nik}}</td>
-          <td class="c">{{$a.UmurStr}}</td>
-          <td class="c">{{$a.JenisKelamin}}</td>
-          <td>{{$a.Agama}}</td>
-          <td>{{$a.Alamat}}</td>
-          <td>{{$a.Keterangan}}</td>
-        </tr>
-        {{end}}
-      </tbody>
-    </table>
-    <p class="placeholder">[NARASI PENUTUP — isi sesuai blangko.]</p>
+    <p>Yang bertanda tangan dibawah ini, ahli waris dari {{.PewarisFrasa}} sanggup diangkat sumpah, bahwa {{.PewarisFrasa}} tempat tinggal terakhir di {{.B.TempatTinggalPewaris}} Kelurahan {{.Peng.NamaKelurahan}} Kecamatan {{.Peng.Kecamatan}}, {{range $i, $p := .B.Pewaris}}{{if $i}} dan {{end}}{{gelar $p.Status}} {{$p.Nama}} ({{statusLabel $p.Status}}) meninggal dunia tepatnya pada tanggal {{tglID $p.TglMeninggal}} sesuai dengan Surat Kematian yang dikeluarkan oleh {{$p.InstansiKematian}} Nomor : {{$p.NoSuratKematian}} Tanggal {{tglID $p.TglSuratKematian}}.{{end}}</p>
+
+    <p>Dari perkawinan {{.PewarisFrasa}}, dikaruniai {{.JumlahAhliWaris}} ({{.Terbilang}}) orang anak yaitu, dengan susunan anggota keluarga yaitu&nbsp;:</p>
+
+    {{template "tabelAhli" .B.AhliWaris}}
+
+    <p>Selain dari nama-nama diatas, tidak ada ahli waris lain dari {{.PewarisFrasa}}, berdasarkan Surat Pernyataan Ahli Waris {{.TanggalID}}.</p>
+
+    <p>Surat Keterangan Ahli Waris dibuat dihadapan 2 (dua) orang saksi yang turut menandatangani yaitu&nbsp;:</p>
+
+    {{template "saksiDua" .B.Saksi}}
+
+    <p>Demikian Surat Keterangan ini kami buat dan apabila dikemudian hari ternyata keterangan kami ini tidak benar, maka Surat Keterangan ini dapat dijadikan dasar penuntutan hukum baik secara Pidana maupun Perdata berdasarkan Peraturan Perundang-undangan yang berlaku di Negara Republik Indonesia tanpa melibatkan unsur pemerintah dan atau pihak lainnya.</p>
   </div>
 
-  <div class="ttd-area">
-    <div class="ttd-parties">
-      {{template "sigAhliWaris" .B.AhliWaris}}
-      {{template "sigSaksi" .B.Saksi}}
+  <div class="ttd2">
+    <div class="col">
+      <div>Kami para Saksi-saksi :</div>
+      <div class="sp"></div>
+      {{range $i, $s := .B.Saksi}}<div class="signrow">{{add $i 1}}. {{$s.Nama}}</div>{{end}}
     </div>
-    <div class="tgl-line">{{.TempatTanggal}}</div>
-    {{template "sigPejabatDua" .}}
+    <div class="col right">
+      <div>{{.TempatTanggal}}</div>
+      <div>Kami Para Ahli Waris,</div>
+      <div class="sp"></div>
+      {{range $i, $a := .B.AhliWaris}}<div class="signrow">{{add $i 1}}. {{$a.Nama}}</div>{{end}}
+    </div>
   </div>
+
+  <div class="garis"></div>
+
+  <div class="isi">
+    <p>Diketahui oleh Camat {{.Peng.Kecamatan}} dan Lurah {{.Peng.NamaKelurahan}} berdasarkan Peraturan Menteri Negara Agraria Kepala BPN Nomor : 03 Tahun 1997 Bagian Kelima Pasal 111 Angka (1) Huruf C.</p>
+  </div>
+
+  {{template "pejabatDua" .}}
 </section>
 
 {{/* ============ SURAT 2: KUASA AHLI WARIS ============ */}}
 <section class="surat">
-  <div class="judul">Surat Kuasa Ahli Waris</div>
-  <div class="nomor">Nomor: {{.B.NomorSurat}}</div>
+  <div class="judul">SURAT KUASA AHLI WARIS</div>
 
   <div class="isi">
-    <p class="placeholder">[NARASI PEMBUKA SURAT KUASA — isi sesuai blangko resmi.]</p>
-    <p>Kami yang bertanda tangan di bawah ini selaku para ahli waris dari almarhum/almarhumah
-      {{range $i, $p := .B.Pewaris}}{{if $i}}; {{end}}{{$p.Nama}}{{end}},
-      dengan ini memberikan kuasa kepada:</p>
+    <p>Kami yang bertanda tangan dibawah ini adalah Ahli Waris {{.PewarisFrasa}}, bersama ini menerangkan dengan sesungguhnya tanpa ada paksaan dari pihak manapun dan sanggup diangkat sumpahnya {{.PewarisFrasa}}, bertempat tinggal terakhir di {{.B.TempatTinggalPewaris}}, Kelurahan {{.Peng.NamaKelurahan}} Kecamatan {{.Peng.Kecamatan}}, dengan data penerima kuasa sebagai berikut&nbsp;:</p>
+
+    {{template "tabelAhli" .PemberiKuasa}}
+
+    <p>Pihak Pertama Penerima Kuasa kepada&nbsp;:</p>
     {{with .PenerimaKuasa}}
     <table class="data">
       <tr><td class="k">Nama</td><td class="s">:</td><td>{{.Nama}}</td></tr>
-      <tr><td class="k">NIK</td><td class="s">:</td><td>{{.Nik}}</td></tr>
+      <tr><td class="k">Tempat / Tgl. Lahir</td><td class="s">:</td><td>{{.TempatLahir}}{{if .TglLahir}}, {{.TglLahir}}{{end}}</td></tr>
+      <tr><td class="k">Nomor Identitas</td><td class="s">:</td><td>{{.Nik}}</td></tr>
+      <tr><td class="k">Pekerjaan</td><td class="s">:</td><td>{{.Pekerjaan}}</td></tr>
       <tr><td class="k">Alamat</td><td class="s">:</td><td>{{.Alamat}}</td></tr>
+      <tr><td class="k">Hubungan dengan Almarhum</td><td class="s">:</td><td>{{.Keterangan}}</td></tr>
     </table>
+    <p style="margin-left:24pt;"><u>Dalam hal ini disebut Pihak Pertama</u> (Penerima Kuasa).</p>
     {{else}}
-    <p class="placeholder">[Penerima kuasa belum dipilih pada aplikasi.]</p>
+    <p><em>[Penerima kuasa belum dipilih pada aplikasi.]</em></p>
     {{end}}
-    <p class="placeholder">[NARASI ISI KUASA — untuk mengurus/menyelesaikan hal berikut; isi sesuai blangko.]</p>
-    <p>Adapun harta/objek yang dikuasakan adalah:</p>
-    {{if .B.Harta}}
-    <table class="tbl">
-      <thead><tr><th>No</th><th>Uraian Harta / Objek yang Dikuasakan</th></tr></thead>
-      <tbody>
-        {{range $i, $h := .B.Harta}}<tr><td class="c">{{add $i 1}}</td><td>{{$h.Deskripsi}}</td></tr>{{end}}
-      </tbody>
-    </table>
+
+    <p>Pihak Pertama dengan akal sehat dan pikiran yang sehat tanpa paksaan dan tidak dipengaruhi dari pihak manapun juga, berdasarkan hasil musyawarah/mufakat dari ahli waris, dengan ini memberikan kuasa untuk:</p>
+
+    {{if .B.Kuasa}}
+    <ol class="nama">
+      {{range .B.Kuasa}}<li>{{.Deskripsi}}</li>{{end}}
+    </ol>
     {{else}}
-    <p class="placeholder">[Belum ada daftar harta.]</p>
+    <p><em>[Belum ada item kuasa.]</em></p>
     {{end}}
-    <p class="placeholder">[NARASI PENUTUP SURAT KUASA — isi sesuai blangko.]</p>
+
+    <p>Surat Kuasa Ahli Waris dibuat dihadapan 2 (dua) orang saksi yang turut menandatangani yaitu&nbsp;:</p>
+
+    {{template "saksiDua" .B.Saksi}}
+
+    <p>Demikian Surat Kuasa ini kami buat dan ditandatangani oleh masing-masing pihak dihadapan 2 (dua) orang saksi.</p>
+
+    <div class="rk">
+      <div>Dibuat di&nbsp;&nbsp;&nbsp;&nbsp;: {{.Peng.Kota}}</div>
+      <div>Pada tanggal : {{.TanggalID}}</div>
+    </div>
+
+    <p style="margin:2pt 0;">Kami para Saksi :</p>
+    {{range $i, $s := .B.Saksi}}<div>{{add $i 1}}. {{$s.Nama}}</div>{{end}}
   </div>
 
-  <div class="ttd-area">
-    <div class="ttd-parties">
-      <div class="sig-block">
-        <div class="sig-heading">Pihak yang Memberi Kuasa:</div>
-        <div class="sig-grid">
-          {{range $i, $a := .PemberiKuasa}}
-          <div class="sig">
-            <div class="sig-role">{{add $i 1}}. {{$a.Nama}}</div>
-            <div class="sig-space"></div>
-            <div>(………………………)</div>
-          </div>
-          {{else}}
-          <div class="placeholder">[Tidak ada pihak pemberi kuasa.]</div>
-          {{end}}
-        </div>
-      </div>
-      <div class="sig-block">
-        <div class="sig-heading">Pihak yang Menerima Kuasa:</div>
-        <div class="sig-grid">
-          {{with .PenerimaKuasa}}
-          <div class="sig">
-            <div class="sig-role">{{.Nama}}</div>
-            <div class="sig-space"></div>
-            <div>(………………………)</div>
-          </div>
-          {{else}}
-          <div class="placeholder">[Belum dipilih.]</div>
-          {{end}}
-        </div>
-      </div>
-      {{template "sigSaksi" .B.Saksi}}
+  <div class="ttd2">
+    <div class="col">
+      <div>Yang Menerima Kuasa,</div>
+      <div>PIHAK I</div>
+      <div class="sp-lg"></div>
+      {{with .PenerimaKuasa}}<div class="strong-name">{{.Nama}}</div>{{else}}<div>(………………………)</div>{{end}}
     </div>
-    <div class="tgl-line">{{.TempatTanggal}}</div>
-    {{template "sigPejabatDua" .}}
+    <div class="col right">
+      <div>Yang Memberi Kuasa,</div>
+      <div>PIHAK II</div>
+      <div class="sp"></div>
+      {{range $i, $p := .PemberiKuasa}}<div class="signrow">{{add $i 1}}. {{$p.Nama}}</div>{{else}}<div>(………………………)</div>{{end}}
+    </div>
   </div>
+
+  {{template "pejabatDua" .}}
 </section>
 
 {{/* ============ SURAT 3: PERNYATAAN AHLI WARIS ============ */}}
 <section class="surat">
-  <div class="judul">Surat Pernyataan Ahli Waris</div>
-  <div class="nomor">Nomor: {{.B.NomorSurat}}</div>
+  <div class="judul">SURAT PERNYATAAN AHLI WARIS</div>
 
   <div class="isi">
-    <p class="placeholder">[NARASI PEMBUKA SURAT PERNYATAAN — isi sesuai blangko resmi.]</p>
-    <p>Kami yang bertanda tangan di bawah ini adalah para ahli waris yang sah dari almarhum/almarhumah
-      {{range $i, $p := .B.Pewaris}}{{if $i}}; {{end}}{{$p.Nama}}{{end}}:</p>
-    <table class="tbl">
-      <thead><tr><th>No</th><th>Nama</th><th>NIK</th><th>Keterangan</th></tr></thead>
-      <tbody>
-        {{range $i, $a := .B.AhliWaris}}
-        <tr><td class="c">{{add $i 1}}</td><td>{{$a.Nama}}</td><td>{{$a.Nik}}</td><td>{{$a.Keterangan}}</td></tr>
-        {{end}}
-      </tbody>
-    </table>
-    <p class="placeholder">[NARASI ISI PERNYATAAN — isi sesuai blangko.]</p>
-    <p class="placeholder">[NARASI PENUTUP — isi sesuai blangko.]</p>
+    <p>Saya yang bertanda tangan dibawah ini&nbsp;:</p>
+
+    {{template "tabelAhli" .B.AhliWaris}}
+
+    <p>Dengan ini menyatakan bahwa memang benar dari {{.PewarisFrasa}}, dikaruniai {{.JumlahAhliWaris}} ({{.Terbilang}}) orang anak yaitu&nbsp;:</p>
+
+    <ol class="nama">
+      {{range .B.AhliWaris}}<li>{{.Nama}}</li>{{end}}
+    </ol>
+
+    <p>Selain dari Ahli Waris tersebut, tidak ada lagi Ahli Waris yang lain dari {{.PewarisFrasa}}.</p>
+
+    <p>Demikian Surat Pernyataan ini kami buat dan apabila dikemudian hari ternyata keterangan kami ini tidak benar, maka Surat Pernyataan ini dapat dijadikan dasar penuntutan hukum baik secara Pidana maupun Perdata berdasarkan Peraturan Perundang-undangan yang berlaku di Negara Republik Indonesia tanpa melibatkan unsur pemerintah dan atau pihak lainnya.</p>
   </div>
 
-  <div class="ttd-area">
-    <div class="ttd-parties">
-      {{template "sigAhliWaris" .B.AhliWaris}}
-      {{template "sigSaksi" .B.Saksi}}
+  <div class="ttd2">
+    <div class="col">
+      <div>Kami para Saksi-saksi :</div>
+      <div class="sp"></div>
+      {{range $i, $s := .B.Saksi}}<div class="signrow">{{add $i 1}}. {{$s.Nama}}</div>{{end}}
     </div>
-    <div class="tgl-line">{{.TempatTanggal}}</div>
-    {{template "sigPejabatLurah" .}}
+    <div class="col right">
+      <div>{{.TempatTanggal}}</div>
+      <div>Kami Para Ahli Waris,</div>
+      <div class="sp"></div>
+      {{range $i, $a := .B.AhliWaris}}<div class="signrow">{{add $i 1}}. {{$a.Nama}}</div>{{end}}
+    </div>
   </div>
+
+  {{template "pejabatLurah" .}}
 </section>
 </body>
 </html>
 {{end}}
 
-{{/* ==================== SUB-TEMPLATES TTD ==================== */}}
+{{/* ==================== SUB-TEMPLATES ==================== */}}
 
-{{define "sigAhliWaris"}}
-<div class="sig-block">
-  <div class="sig-heading">Ahli Waris:</div>
-  <div class="sig-grid">
+{{define "tabelAhli"}}
+<table class="tbl">
+  <thead>
+    <tr><th>No</th><th>N a m a</th><th>No. Identitas/NIK</th><th>Umur</th><th>L/P</th><th>Agama</th><th>Alamat</th><th>Ket</th></tr>
+  </thead>
+  <tbody>
     {{range $i, $a := .}}
-    <div class="sig">
-      <div class="sig-role">{{add $i 1}}. {{$a.Nama}}</div>
-      <div class="sig-space"></div>
-      <div>(………………………)</div>
-    </div>
+    <tr>
+      <td class="c">{{add $i 1}}.</td>
+      <td>{{$a.Nama}}</td>
+      <td>{{$a.Nik}}</td>
+      <td class="c">{{$a.UmurStr}}</td>
+      <td class="c">{{$a.JenisKelamin}}</td>
+      <td>{{$a.Agama}}</td>
+      <td>{{$a.Alamat}}</td>
+      <td>{{$a.Keterangan}}</td>
+    </tr>
+    {{else}}
+    <tr><td colspan="8" class="c"><em>[Tidak ada data]</em></td></tr>
     {{end}}
-  </div>
-</div>
+  </tbody>
+</table>
 {{end}}
 
-{{define "sigSaksi"}}
-<div class="sig-block">
-  <div class="sig-heading">Saksi-Saksi:</div>
-  <div class="sig-grid">
-    {{range $i, $s := .}}
-    <div class="sig">
-      <div class="sig-role">Saksi {{add $i 1}}{{if $s.Nama}} — {{$s.Nama}}{{end}}</div>
-      <div class="sig-space"></div>
-      <div>(………………………)</div>
-    </div>
-    {{end}}
-  </div>
-</div>
+{{define "saksiDua"}}
+{{if ge (len .) 2}}
+{{$a := index . 0}}{{$b := index . 1}}
+<table class="saksi2">
+  <tr>
+    <td class="no">1.</td><td class="lbl">N a m a</td><td class="c">:</td><td>{{$a.Nama}}</td>
+    <td class="gap"></td>
+    <td class="no">2.</td><td class="lbl">Nama</td><td class="c">:</td><td>{{$b.Nama}}</td>
+  </tr>
+  <tr>
+    <td></td><td class="lbl">Tempat/Tgl. Lahir</td><td class="c">:</td><td>{{$a.TempatLahir}}{{if $a.TglLahir}}, {{tglID $a.TglLahir}}{{end}}</td>
+    <td></td>
+    <td></td><td class="lbl">Tempat/Tgl. Lahir</td><td class="c">:</td><td>{{$b.TempatLahir}}{{if $b.TglLahir}}, {{tglID $b.TglLahir}}{{end}}</td>
+  </tr>
+  <tr>
+    <td></td><td class="lbl">Alamat</td><td class="c">:</td><td>{{$a.Alamat}}</td>
+    <td></td>
+    <td></td><td class="lbl">Alamat</td><td class="c">:</td><td>{{$b.Alamat}}</td>
+  </tr>
+  <tr>
+    <td></td><td class="lbl">NIK</td><td class="c">:</td><td>{{$a.Nik}}</td>
+    <td></td>
+    <td></td><td class="lbl">NIK</td><td class="c">:</td><td>{{$b.Nik}}</td>
+  </tr>
+  <tr>
+    <td></td><td class="lbl">Hub dengan Alm</td><td class="c">:</td><td>{{$a.Hubungan}}</td>
+    <td></td>
+    <td></td><td class="lbl">Hub dengan Alm</td><td class="c">:</td><td>{{$b.Hubungan}}</td>
+  </tr>
+</table>
+{{end}}
 {{end}}
 
-{{define "sigPejabatDua"}}
-<div class="sig-pejabat">
-  <div class="sig">
-    <div class="sig-role">Camat {{orDash .Peng.Kecamatan}}</div>
-    <div class="sig-space-lg"></div>
+{{define "pejabatDua"}}
+<div class="pejabat2">
+  <div class="col">
+    <div>Mengetahui :</div>
+    <div>Reg. No. : {{.B.RegNoCamat}}</div>
+    <div>Tanggal&nbsp;&nbsp;: {{orDash .B.TanggalRegCamat}}</div>
+    <div class="jab" style="text-align:center;">C A M A T,</div>
+    <div class="sp-lg"></div>
     {{if .Camat}}
-      <div class="sig-name-strong">{{.Camat.Nama}}</div>
-      <div class="sig-nip">NIP. {{.Camat.Nip}}</div>
+      <div class="strong-name" style="text-align:center;">{{.Camat.Nama}}</div>
+      <div style="text-align:center;">NIP. {{.Camat.Nip}}</div>
     {{else}}
-      <div>(………………………)</div>
-      <div class="sig-nip">NIP. .................</div>
+      <div style="text-align:center;">(………………………)</div>
+      <div style="text-align:center;">NIP. .................</div>
     {{end}}
   </div>
-  <div class="sig">
-    <div class="sig-role">Lurah {{orDash .Peng.NamaKelurahan}}</div>
-    <div class="sig-space-lg"></div>
+  <div class="col">
+    <div>Mengetahui :</div>
+    <div>Reg. No. : {{.B.RegNoLurah}}</div>
+    <div>Tanggal&nbsp;&nbsp;: {{orDash .B.TanggalRegLurah}}</div>
+    <div class="jab" style="text-align:center;">L U R A H,</div>
+    <div class="sp-lg"></div>
     {{if .Lurah}}
-      <div class="sig-name-strong">{{.Lurah.Nama}}</div>
-      <div class="sig-nip">NIP. {{.Lurah.Nip}}</div>
+      <div class="strong-name" style="text-align:center;">{{.Lurah.Nama}}</div>
+      <div style="text-align:center;">NIP. {{.Lurah.Nip}}</div>
     {{else}}
-      <div>(………………………)</div>
-      <div class="sig-nip">NIP. .................</div>
+      <div style="text-align:center;">(………………………)</div>
+      <div style="text-align:center;">NIP. .................</div>
     {{end}}
   </div>
 </div>
 {{end}}
 
-{{define "sigPejabatLurah"}}
-<div class="sig-pejabat right-only">
-  <div class="sig">
-    <div class="sig-role">Lurah {{orDash .Peng.NamaKelurahan}}</div>
-    <div class="sig-space-lg"></div>
+{{define "pejabatLurah"}}
+<div class="pejabat1">
+  <div class="col">
+    <div>Mengetahui,</div>
+    <div class="jab">L U R A H,</div>
+    <div class="sp-lg"></div>
     {{if .Lurah}}
-      <div class="sig-name-strong">{{.Lurah.Nama}}</div>
-      <div class="sig-nip">NIP. {{.Lurah.Nip}}</div>
+      <div class="strong-name">{{.Lurah.Nama}}</div>
+      <div>NIP. {{.Lurah.Nip}}</div>
     {{else}}
       <div>(………………………)</div>
-      <div class="sig-nip">NIP. .................</div>
+      <div>NIP. .................</div>
     {{end}}
   </div>
 </div>

@@ -4,7 +4,7 @@
   import { notify } from '../lib/stores.js'
   import ChangePassword from './ChangePassword.svelte'
 
-  let form = { nama_kelurahan: '', kecamatan: '', kabupaten: '', provinsi: '', format_nomor: '' }
+  let form = { nama_kelurahan: '', kecamatan: '', kota: '', kode_kecamatan: '', kode_kelurahan: '', instansi_kematian: '' }
   let loading = true
   let showPw = false
 
@@ -56,24 +56,23 @@
     <h3>Identitas Kelurahan</h3>
     <form on:submit|preventDefault={save}>
       <div class="row row-2">
-        <div class="field"><label>Nama Kelurahan</label><input bind:value={form.nama_kelurahan} /></div>
-        <div class="field"><label>Kecamatan</label><input bind:value={form.kecamatan} /></div>
+        <div class="field"><label>Nama Kelurahan</label><input bind:value={form.nama_kelurahan} placeholder="mis. Teluk Binjai" /></div>
+        <div class="field"><label>Kecamatan</label><input bind:value={form.kecamatan} placeholder="mis. Dumai Timur" /></div>
       </div>
-      <div class="row row-2">
-        <div class="field"><label>Kabupaten</label><input bind:value={form.kabupaten} /></div>
-        <div class="field"><label>Provinsi</label><input bind:value={form.provinsi} /></div>
+      <div class="row row-3">
+        <div class="field"><label>Kota</label><input bind:value={form.kota} placeholder="mis. Dumai" /></div>
+        <div class="field"><label>Kode Kecamatan</label><input class="mono" bind:value={form.kode_kecamatan} placeholder="mis. DT" /></div>
+        <div class="field"><label>Kode Kelurahan</label><input class="mono" bind:value={form.kode_kelurahan} placeholder="mis. TB" /></div>
       </div>
       <div class="field">
-        <label>Format Nomor Surat</label>
-        <input class="mono" bind:value={form.format_nomor} placeholder="470/&#123;urutan3&#125;/&#123;bulan_romawi&#125;/&#123;tahun&#125;" />
-        <div class="small muted mt-1">
-          Placeholder: <span class="mono">&#123;urutan&#125;</span> <span class="mono">&#123;urutan3&#125;</span>
-          <span class="mono">&#123;bulan_romawi&#125;</span> <span class="mono">&#123;bulan&#125;</span>
-          <span class="mono">&#123;tahun&#125;</span> <span class="mono">&#123;kelurahan&#125;</span> <span class="mono">&#123;kecamatan&#125;</span>.
-          Kosongkan untuk pakai default <span class="mono">&#123;urutan3&#125;/SKW/&#123;bulan_romawi&#125;/&#123;tahun&#125;</span>.
-        </div>
+        <label>Instansi Penerbit Surat Kematian (default)</label>
+        <input bind:value={form.instansi_kematian} placeholder="mis. Dinas Kependudukan dan Pencatatan Sipil Kota Dumai" />
       </div>
-      <button class="btn btn-primary">Simpan Pengaturan</button>
+      <div class="small muted mt-1">
+        Reg. No. Camat = <span class="mono">&#123;urutan&#125;/SKAW/&#123;kode_kecamatan&#125;/&#123;tahun&#125;</span> ·
+        Reg. No. Lurah = <span class="mono">&#123;urutan&#125;/SKAW/&#123;kode_kelurahan&#125;-&#123;kode_kecamatan&#125;/&#123;tahun&#125;</span>
+      </div>
+      <button class="btn btn-primary mt-1">Simpan Pengaturan</button>
     </form>
   </div>
 

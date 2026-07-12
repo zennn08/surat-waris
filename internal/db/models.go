@@ -11,6 +11,7 @@ import (
 type AhliWaris struct {
 	ID           int64          `json:"id"`
 	BerkasID     int64          `json:"berkas_id"`
+	Urutan       int64          `json:"urutan"`
 	Nama         string         `json:"nama"`
 	Nik          string         `json:"nik"`
 	Umur         sql.NullInt64  `json:"umur"`
@@ -18,25 +19,32 @@ type AhliWaris struct {
 	Agama        sql.NullString `json:"agama"`
 	Alamat       sql.NullString `json:"alamat"`
 	Keterangan   sql.NullString `json:"keterangan"`
+	TempatLahir  sql.NullString `json:"tempat_lahir"`
+	TglLahir     sql.NullString `json:"tgl_lahir"`
+	Pekerjaan    sql.NullString `json:"pekerjaan"`
 }
 
 type BerkasWaris struct {
-	ID                       int64         `json:"id"`
-	NomorSurat               string        `json:"nomor_surat"`
-	Tahun                    int64         `json:"tahun"`
-	Urutan                   int64         `json:"urutan"`
-	Tanggal                  string        `json:"tanggal"`
-	TempatTinggalPewaris     string        `json:"tempat_tinggal_pewaris"`
-	PenerimaKuasaAhliWarisID sql.NullInt64 `json:"penerima_kuasa_ahli_waris_id"`
-	Status                   string        `json:"status"`
-	CreatedBy                sql.NullInt64 `json:"created_by"`
-	CreatedAt                string        `json:"created_at"`
-	UpdatedAt                string        `json:"updated_at"`
+	ID                       int64          `json:"id"`
+	Tahun                    int64          `json:"tahun"`
+	Urutan                   int64          `json:"urutan"`
+	RegNoCamat               string         `json:"reg_no_camat"`
+	RegNoLurah               string         `json:"reg_no_lurah"`
+	TanggalRegCamat          sql.NullString `json:"tanggal_reg_camat"`
+	TanggalRegLurah          sql.NullString `json:"tanggal_reg_lurah"`
+	TanggalSurat             string         `json:"tanggal_surat"`
+	TempatTinggalPewaris     string         `json:"tempat_tinggal_pewaris"`
+	PenerimaKuasaAhliWarisID sql.NullInt64  `json:"penerima_kuasa_ahli_waris_id"`
+	Status                   string         `json:"status"`
+	CreatedBy                sql.NullInt64  `json:"created_by"`
+	CreatedAt                string         `json:"created_at"`
+	UpdatedAt                string         `json:"updated_at"`
 }
 
-type Harta struct {
+type KuasaItem struct {
 	ID        int64  `json:"id"`
 	BerkasID  int64  `json:"berkas_id"`
+	Urutan    int64  `json:"urutan"`
 	Deskripsi string `json:"deskripsi"`
 }
 
@@ -55,32 +63,38 @@ type Pejabat struct {
 }
 
 type Pengaturan struct {
-	ID            int64          `json:"id"`
-	NamaKelurahan sql.NullString `json:"nama_kelurahan"`
-	Kecamatan     sql.NullString `json:"kecamatan"`
-	Kabupaten     sql.NullString `json:"kabupaten"`
-	Provinsi      sql.NullString `json:"provinsi"`
-	FormatNomor   sql.NullString `json:"format_nomor"`
+	ID               int64          `json:"id"`
+	NamaKelurahan    sql.NullString `json:"nama_kelurahan"`
+	Kecamatan        sql.NullString `json:"kecamatan"`
+	Kota             sql.NullString `json:"kota"`
+	KodeKecamatan    sql.NullString `json:"kode_kecamatan"`
+	KodeKelurahan    sql.NullString `json:"kode_kelurahan"`
+	InstansiKematian sql.NullString `json:"instansi_kematian"`
 }
 
 type Pewaris struct {
 	ID               int64  `json:"id"`
 	BerkasID         int64  `json:"berkas_id"`
+	Urutan           int64  `json:"urutan"`
 	Nama             string `json:"nama"`
 	Nik              string `json:"nik"`
+	Status           string `json:"status"`
 	TglMeninggal     string `json:"tgl_meninggal"`
+	InstansiKematian string `json:"instansi_kematian"`
 	NoSuratKematian  string `json:"no_surat_kematian"`
 	TglSuratKematian string `json:"tgl_surat_kematian"`
 }
 
 type Saksi struct {
-	ID       int64          `json:"id"`
-	BerkasID int64          `json:"berkas_id"`
-	Nama     string         `json:"nama"`
-	Ttl      sql.NullString `json:"ttl"`
-	Alamat   sql.NullString `json:"alamat"`
-	Nik      sql.NullString `json:"nik"`
-	Hubungan sql.NullString `json:"hubungan"`
+	ID          int64          `json:"id"`
+	BerkasID    int64          `json:"berkas_id"`
+	Urutan      int64          `json:"urutan"`
+	Nama        string         `json:"nama"`
+	TempatLahir sql.NullString `json:"tempat_lahir"`
+	TglLahir    sql.NullString `json:"tgl_lahir"`
+	Alamat      sql.NullString `json:"alamat"`
+	Nik         sql.NullString `json:"nik"`
+	Hubungan    sql.NullString `json:"hubungan"`
 }
 
 type User struct {
