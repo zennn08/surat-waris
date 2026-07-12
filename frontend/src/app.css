@@ -36,7 +36,9 @@ h3 { font-size: 1.02rem; }
 a { color: var(--primary); }
 
 /* Layout */
-.app-shell { min-height: 100vh; display: flex; flex-direction: column; }
+/* #app = kolom flex setinggi viewport agar footer menempel di bawah walau konten pendek */
+#app { min-height: 100vh; display: flex; flex-direction: column; }
+.app-shell { flex: 1; display: flex; flex-direction: column; }
 .container { width: 100%; max-width: 1040px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
 
 .topbar {
@@ -136,7 +138,7 @@ tbody tr:hover { background: #fafbfc; }
 .toast.success { background: var(--primary); }
 
 /* Login */
-.login-wrap { min-height: 100vh; display: grid; place-items: center; background: var(--bg); padding: 1rem; }
+.login-wrap { flex: 1; display: grid; place-items: center; background: var(--bg); padding: 1rem; }
 .login-card { width: 100%; max-width: 380px; }
 
 /* Item cards (dynamic lists) */

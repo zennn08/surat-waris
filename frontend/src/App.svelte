@@ -73,3 +73,16 @@
 {#if $toast}
   <div class="toast {$toast.type}">{$toast.message}</div>
 {/if}
+
+<footer class="app-footer">© Kukerta UNRI Kec. Dumai Timur 2026</footer>
+
+<style>
+  .app-footer {
+    flex-shrink: 0;
+    text-align: center;
+    padding: 14px 16px 18px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--muted, #64748b);
+  }
+</style>
