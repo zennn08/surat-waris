@@ -10,18 +10,23 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+
+	"surat-waris/internal/surat"
 )
 
 // cetakData adalah view-model untuk ketiga surat.
 type cetakData struct {
-	B             berkasDetail
-	Peng          pengaturanView
-	Lurah         *pejabatView
-	Camat         *pejabatView
-	PenerimaKuasa *ahliWarisView
-	PemberiKuasa  []ahliWarisView
-	TanggalID     string // "10 Juli 2026"
-	TempatTanggal string // "Sukamaju, 10 Juli 2026"
+	B               berkasDetail
+	Peng            pengaturanView
+	Lurah           *pejabatView
+	Camat           *pejabatView
+	PenerimaKuasa   *ahliWarisView
+	PemberiKuasa    []ahliWarisView
+	PewarisFrasa    string // "Almarhum X (Suami) dan Almarhumah Y (Istri)"
+	JumlahAhliWaris int
+	Terbilang       string // ejaan jumlah ahli waris, mis. "Empat"
+	TanggalID       string // "10 Juli 2026"
+	TempatTanggal   string // "Dumai, 10 Juli 2026"
 }
 
 var bulanID = [...]string{
@@ -63,13 +68,22 @@ func (h *Handler) Cetak(w http.ResponseWriter, r *http.Request) {
 	}
 	pv := toPengaturanView(peng)
 
+	tglID := formatTanggalID(detail.TanggalSurat)
+	refs := make([]surat.PewarisRef, 0, len(detail.Pewaris))
+	for _, p := range detail.Pewaris {
+		refs = append(refs, surat.PewarisRef{Nama: p.Nama, Status: p.Status})
+	}
+
 	data := cetakData{
-		B:             detail,
-		Peng:          pv,
-		Lurah:         h.pejabatAktif(r, "lurah"),
-		Camat:         h.pejabatAktif(r, "camat"),
-		TanggalID:     formatTanggalID(detail.Tanggal),
-		TempatTanggal: tempatTanggal(pv.NamaKelurahan, formatTanggalID(detail.Tanggal)),
+		B:               detail,
+		Peng:            pv,
+		Lurah:           h.pejabatAktif(r, "lurah"),
+		Camat:           h.pejabatAktif(r, "camat"),
+		PewarisFrasa:    surat.PewarisFrasa(refs),
+		JumlahAhliWaris: len(detail.AhliWaris),
+		Terbilang:       surat.Terbilang(len(detail.AhliWaris)),
+		TanggalID:       tglID,
+		TempatTanggal:   tempatTanggal(pv.Kota, tglID),
 	}
 
 	// Bagi ahli waris menjadi penerima & pemberi kuasa (untuk Surat Kuasa).
@@ -135,6 +149,13 @@ func TemplateFuncs() template.FuncMap {
 	return template.FuncMap{
 		"add":   func(a, b int) int { return a + b },
 		"tglID": formatTanggalID,
+		"gelar": surat.Gelar,
+		"statusLabel": func(s string) string {
+			if strings.EqualFold(strings.TrimSpace(s), "istri") {
+				return "Istri"
+			}
+			return "Suami"
+		},
 		"orDash": func(s string) string {
 			if strings.TrimSpace(s) == "" {
 				return "................."

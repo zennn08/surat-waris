@@ -5,29 +5,29 @@
 
   const today = new Date().toISOString().slice(0, 10)
 
-  let tanggal = today
+  let tanggal_surat = today
   let tempat_tinggal_pewaris = ''
 
-  let pewaris = [emptyPewaris()]
+  let pewaris = [emptyPewaris('suami')]
   let ahli_waris = [emptyAhli()]
   let saksi = [emptySaksi(), emptySaksi()] // tepat 2
-  let harta = ['']
+  let kuasa = ['']
   let penerima_kuasa_index = null
 
   let error = ''
   let busy = false
 
-  function emptyPewaris() {
-    return { nama: '', nik: '', tgl_meninggal: '', no_surat_kematian: '', tgl_surat_kematian: '' }
+  function emptyPewaris(status = 'suami') {
+    return { nama: '', nik: '', status, tgl_meninggal: '', instansi_kematian: '', no_surat_kematian: '', tgl_surat_kematian: '' }
   }
   function emptyAhli() {
-    return { nama: '', nik: '', umur: '', jenis_kelamin: 'L', agama: '', alamat: '', keterangan: '' }
+    return { nama: '', nik: '', umur: '', jenis_kelamin: 'L', agama: '', alamat: '', keterangan: '', tempat_lahir: '', tgl_lahir: '', pekerjaan: '' }
   }
   function emptySaksi() {
-    return { nama: '', ttl: '', alamat: '', nik: '', hubungan: '' }
+    return { nama: '', tempat_lahir: '', tgl_lahir: '', alamat: '', nik: '', hubungan: '' }
   }
 
-  function addPewaris() { if (pewaris.length < 2) pewaris = [...pewaris, emptyPewaris()] }
+  function addPewaris() { if (pewaris.length < 2) pewaris = [...pewaris, emptyPewaris('istri')] }
   function removePewaris(i) { if (pewaris.length > 1) pewaris = pewaris.filter((_, x) => x !== i) }
 
   function addAhli() { ahli_waris = [...ahli_waris, emptyAhli()] }
@@ -38,31 +38,31 @@
     else if (penerima_kuasa_index > i) penerima_kuasa_index -= 1
   }
 
-  function addHarta() { harta = [...harta, ''] }
-  function removeHarta(i) { harta = harta.filter((_, x) => x !== i) }
+  function addKuasa() { kuasa = [...kuasa, ''] }
+  function removeKuasa(i) { kuasa = kuasa.filter((_, x) => x !== i) }
 
   // Isi data contoh (alat bantu testing). NIK diacak agar tidak kena lock saat tes berulang.
   function randNik() {
-    let s = '32010'
-    for (let i = 0; i < 11; i++) s += Math.floor(Math.random() * 10)
+    let s = '1472010'
+    for (let i = 0; i < 9; i++) s += Math.floor(Math.random() * 10)
     return s
   }
   function fillSample() {
-    tanggal = today
-    tempat_tinggal_pewaris = 'Jl. Melati No. 10, RT 002/003, Kel. Sukamaju'
-    pewaris = [{
-      nama: 'Alm. Sutrisno bin Karta', nik: randNik(),
-      tgl_meninggal: '2025-03-15', no_surat_kematian: '474.3/012/2025', tgl_surat_kematian: '2025-03-20',
-    }]
+    tanggal_surat = today
+    tempat_tinggal_pewaris = 'Jl. Merdeka Baru RT.007'
+    pewaris = [
+      { nama: 'FAOZIDUHU TAFONAO', nik: randNik(), status: 'suami', tgl_meninggal: '2023-12-27', instansi_kematian: '', no_surat_kematian: '1472-KM-05012024-0005', tgl_surat_kematian: '2024-01-05' },
+      { nama: 'SARITISA TAFONAO', nik: randNik(), status: 'istri', tgl_meninggal: '2024-02-10', instansi_kematian: '', no_surat_kematian: '1472-KM-9', tgl_surat_kematian: '2024-02-15' },
+    ]
     ahli_waris = [
-      { nama: 'Andi Sutrisno', nik: randNik(), umur: 30, jenis_kelamin: 'L', agama: 'Islam', alamat: 'Jl. Melati No. 10', keterangan: 'Anak Kandung' },
-      { nama: 'Bunga Sutrisno', nik: randNik(), umur: 27, jenis_kelamin: 'P', agama: 'Islam', alamat: 'Jl. Melati No. 10', keterangan: 'Anak Kandung' },
+      { nama: 'ANGERAGO TAFONAO', nik: randNik(), umur: 31, jenis_kelamin: 'L', agama: 'Kristen', alamat: 'Jl. Sabar Menanti', keterangan: 'Anak', tempat_lahir: 'Doli-doli', tgl_lahir: '08-12-1994', pekerjaan: 'Pelajar/Mahasiswa' },
+      { nama: 'ELViNA TAFONAO', nik: randNik(), umur: 27, jenis_kelamin: 'P', agama: 'Kristen', alamat: 'Jl. Sabar Menanti', keterangan: 'Anak', tempat_lahir: '', tgl_lahir: '', pekerjaan: '' },
     ]
     saksi = [
-      { nama: 'Rahmat Hidayat', ttl: 'Bogor, 12 Mei 1970', alamat: 'Jl. Anggrek 3', nik: randNik(), hubungan: 'Ketua RT' },
-      { nama: 'Siti Aminah', ttl: 'Bogor, 8 Agustus 1972', alamat: 'Jl. Anggrek 5', nik: randNik(), hubungan: 'Ketua RW' },
+      { nama: 'Rahmat Hidayat', tempat_lahir: 'Bogor', tgl_lahir: '1970-05-12', alamat: 'Jl. Anggrek 3', nik: randNik(), hubungan: 'Tetangga' },
+      { nama: 'Siti Aminah', tempat_lahir: 'Bogor', tgl_lahir: '1972-08-08', alamat: 'Jl. Anggrek 5', nik: randNik(), hubungan: 'Famili' },
     ]
-    harta = ['Tanah SHM No. 123 luas 200 m²', 'Sepeda motor Honda B 1234 XYZ']
+    kuasa = ['Pengurusan administrasi kartu BPJS Ketenagakerjaan dengan Nomor 23137224459 an. Almarhummah SARITISA TAFONAO Kepada an. ANGERAGO TAFONAO (Anak)']
     penerima_kuasa_index = 0
   }
 
@@ -71,20 +71,21 @@
     busy = true
     try {
       const payload = {
-        tanggal,
+        tanggal_surat,
         tempat_tinggal_pewaris,
         pewaris: pewaris.map((p) => ({ ...p })),
         ahli_waris: ahli_waris.map((a) => ({
           nama: a.nama, nik: a.nik,
           umur: a.umur === '' || a.umur === null ? null : Number(a.umur),
           jenis_kelamin: a.jenis_kelamin, agama: a.agama, alamat: a.alamat, keterangan: a.keterangan,
+          tempat_lahir: a.tempat_lahir, tgl_lahir: a.tgl_lahir, pekerjaan: a.pekerjaan,
         })),
         saksi: saksi.map((s) => ({ ...s })),
         penerima_kuasa_index: penerima_kuasa_index === null ? null : Number(penerima_kuasa_index),
-        harta: harta.map((h) => h.trim()).filter(Boolean),
+        kuasa: kuasa.map((k) => k.trim()).filter(Boolean),
       }
       const created = await api.post('/api/berkas', payload)
-      notify('Berkas berhasil dibuat: ' + created.nomor_surat, 'success')
+      notify('Berkas berhasil dibuat: ' + created.reg_no_camat, 'success')
       navigate('/berkas/' + created.id)
     } catch (e) {
       error = e.message
@@ -111,11 +112,11 @@
     <div class="row row-2">
       <div class="field">
         <label for="tgl">Tanggal Surat</label>
-        <input id="tgl" type="date" bind:value={tanggal} required />
+        <input id="tgl" type="date" bind:value={tanggal_surat} required />
       </div>
       <div class="field">
-        <label for="tt">Tempat Tinggal Pewaris</label>
-        <input id="tt" bind:value={tempat_tinggal_pewaris} placeholder="Alamat tempat tinggal pewaris" required />
+        <label for="tt">Tempat Tinggal Terakhir Pewaris</label>
+        <input id="tt" bind:value={tempat_tinggal_pewaris} placeholder="mis. Jl. Merdeka Baru RT.007" required />
       </div>
     </div>
   </div>
@@ -132,12 +133,18 @@
           <strong>Pewaris {i + 1}</strong>
           {#if pewaris.length > 1}<button type="button" class="btn btn-sm btn-danger" on:click={() => removePewaris(i)}>Hapus</button>{/if}
         </div>
-        <div class="row row-2">
+        <div class="row row-3">
           <div class="field"><label>Nama</label><input bind:value={p.nama} required /></div>
           <div class="field"><label>NIK</label><input bind:value={p.nik} class="mono" required /></div>
+          <div class="field"><label>Status</label>
+            <select bind:value={p.status}><option value="suami">Suami</option><option value="istri">Istri</option></select>
+          </div>
         </div>
-        <div class="row row-3">
+        <div class="row row-2">
           <div class="field"><label>Tgl Meninggal</label><input type="date" bind:value={p.tgl_meninggal} required /></div>
+          <div class="field"><label>Instansi Penerbit Surat Kematian</label><input bind:value={p.instansi_kematian} placeholder="kosongkan = default pengaturan" /></div>
+        </div>
+        <div class="row row-2">
           <div class="field"><label>No. Surat Kematian</label><input bind:value={p.no_surat_kematian} required /></div>
           <div class="field"><label>Tgl Surat Kematian</label><input type="date" bind:value={p.tgl_surat_kematian} required /></div>
         </div>
@@ -155,6 +162,7 @@
       <div class="item-card">
         <div class="item-head">
           <strong>Ahli Waris {i + 1}</strong>
+          {#if penerima_kuasa_index === i}<span class="badge badge-green">Penerima Kuasa</span>{/if}
           {#if ahli_waris.length > 1}<button type="button" class="btn btn-sm btn-danger" on:click={() => removeAhli(i)}>Hapus</button>{/if}
         </div>
         <div class="row row-2">
@@ -172,6 +180,15 @@
           <div class="field"><label>Alamat</label><input bind:value={a.alamat} /></div>
           <div class="field"><label>Keterangan (mis. Anak, Istri)</label><input bind:value={a.keterangan} /></div>
         </div>
+        {#if penerima_kuasa_index === i}
+          <div class="divider"></div>
+          <div class="section-sub">Data pelengkap penerima kuasa (dipakai di Surat Kuasa)</div>
+          <div class="row row-3">
+            <div class="field"><label>Tempat Lahir</label><input bind:value={a.tempat_lahir} /></div>
+            <div class="field"><label>Tgl Lahir</label><input bind:value={a.tgl_lahir} placeholder="mis. 08-12-1994" /></div>
+            <div class="field"><label>Pekerjaan</label><input bind:value={a.pekerjaan} /></div>
+          </div>
+        {/if}
       </div>
     {/each}
   </div>
@@ -183,9 +200,10 @@
     {#each saksi as s, i}
       <div class="item-card">
         <div class="item-head"><strong>Saksi {i + 1}</strong></div>
-        <div class="row row-2">
+        <div class="row row-3">
           <div class="field"><label>Nama</label><input bind:value={s.nama} required /></div>
-          <div class="field"><label>TTL (Tempat, Tgl Lahir)</label><input bind:value={s.ttl} /></div>
+          <div class="field"><label>Tempat Lahir</label><input bind:value={s.tempat_lahir} /></div>
+          <div class="field"><label>Tgl Lahir</label><input bind:value={s.tgl_lahir} placeholder="mis. 1970-05-12" /></div>
         </div>
         <div class="row row-3">
           <div class="field"><label>NIK</label><input bind:value={s.nik} class="mono" /></div>
@@ -199,7 +217,7 @@
   <!-- Surat Kuasa -->
   <div class="card">
     <h3>Bagian Surat Kuasa</h3>
-    <div class="section-sub">Penerima kuasa dipilih dari ahli waris; harta = yang dikuasakan (bisa diedit nanti)</div>
+    <div class="section-sub">Penerima kuasa dipilih dari ahli waris; ahli waris lain menjadi pemberi kuasa. Item kuasa bisa diedit nanti.</div>
 
     <div class="field">
       <label>Penerima Kuasa (diberi kuasa oleh ahli waris lain)</label>
@@ -214,14 +232,14 @@
     <div class="divider"></div>
 
     <div class="card-title">
-      <h3 class="mb-0" style="font-size:0.95rem;">Daftar Harta / Yang Dikuasakan</h3>
-      <button type="button" class="btn btn-sm" on:click={addHarta}>+ Tambah Harta</button>
+      <h3 class="mb-0" style="font-size:0.95rem;">Daftar Item Kuasa</h3>
+      <button type="button" class="btn btn-sm" on:click={addKuasa}>+ Tambah Item</button>
     </div>
-    {#if harta.length === 0}<div class="muted small">Belum ada harta.</div>{/if}
-    {#each harta as _, i}
+    {#if kuasa.length === 0}<div class="muted small">Belum ada item kuasa.</div>{/if}
+    {#each kuasa as _, i}
       <div class="flex gap items-center mt-1">
-        <input class="grow" placeholder="mis. Tanah SHM No. 123, luas 200 m²" bind:value={harta[i]} />
-        <button type="button" class="btn btn-sm btn-danger" on:click={() => removeHarta(i)}>Hapus</button>
+        <textarea class="grow" rows="2" placeholder="mis. Pengurusan administrasi kartu BPJS Ketenagakerjaan Nomor … an. …" bind:value={kuasa[i]}></textarea>
+        <button type="button" class="btn btn-sm btn-danger" on:click={() => removeKuasa(i)}>Hapus</button>
       </div>
     {/each}
   </div>

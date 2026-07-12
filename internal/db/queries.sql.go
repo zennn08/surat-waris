@@ -34,13 +34,14 @@ func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
 }
 
 const createAhliWaris = `-- name: CreateAhliWaris :one
-INSERT INTO ahli_waris (berkas_id, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, berkas_id, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan
+INSERT INTO ahli_waris (berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, tempat_lahir, tgl_lahir, pekerjaan)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, tempat_lahir, tgl_lahir, pekerjaan
 `
 
 type CreateAhliWarisParams struct {
 	BerkasID     int64          `json:"berkas_id"`
+	Urutan       int64          `json:"urutan"`
 	Nama         string         `json:"nama"`
 	Nik          string         `json:"nik"`
 	Umur         sql.NullInt64  `json:"umur"`
@@ -48,12 +49,16 @@ type CreateAhliWarisParams struct {
 	Agama        sql.NullString `json:"agama"`
 	Alamat       sql.NullString `json:"alamat"`
 	Keterangan   sql.NullString `json:"keterangan"`
+	TempatLahir  sql.NullString `json:"tempat_lahir"`
+	TglLahir     sql.NullString `json:"tgl_lahir"`
+	Pekerjaan    sql.NullString `json:"pekerjaan"`
 }
 
 // AHLI WARIS
 func (q *Queries) CreateAhliWaris(ctx context.Context, arg CreateAhliWarisParams) (AhliWaris, error) {
 	row := q.db.QueryRowContext(ctx, createAhliWaris,
 		arg.BerkasID,
+		arg.Urutan,
 		arg.Nama,
 		arg.Nik,
 		arg.Umur,
@@ -61,11 +66,15 @@ func (q *Queries) CreateAhliWaris(ctx context.Context, arg CreateAhliWarisParams
 		arg.Agama,
 		arg.Alamat,
 		arg.Keterangan,
+		arg.TempatLahir,
+		arg.TglLahir,
+		arg.Pekerjaan,
 	)
 	var i AhliWaris
 	err := row.Scan(
 		&i.ID,
 		&i.BerkasID,
+		&i.Urutan,
 		&i.Nama,
 		&i.Nik,
 		&i.Umur,
@@ -73,42 +82,51 @@ func (q *Queries) CreateAhliWaris(ctx context.Context, arg CreateAhliWarisParams
 		&i.Agama,
 		&i.Alamat,
 		&i.Keterangan,
+		&i.TempatLahir,
+		&i.TglLahir,
+		&i.Pekerjaan,
 	)
 	return i, err
 }
 
 const createBerkas = `-- name: CreateBerkas :one
-INSERT INTO berkas_waris (nomor_surat, tahun, urutan, tanggal, tempat_tinggal_pewaris, created_by)
-VALUES (?, ?, ?, ?, ?, ?)
-RETURNING id, nomor_surat, tahun, urutan, tanggal, tempat_tinggal_pewaris,
-          penerima_kuasa_ahli_waris_id, status, created_by, created_at, updated_at
+INSERT INTO berkas_waris (tahun, urutan, reg_no_camat, reg_no_lurah, tanggal_surat, tempat_tinggal_pewaris, created_by)
+VALUES (?, ?, ?, ?, ?, ?, ?)
+RETURNING id, tahun, urutan, reg_no_camat, reg_no_lurah, tanggal_reg_camat, tanggal_reg_lurah,
+          tanggal_surat, tempat_tinggal_pewaris, penerima_kuasa_ahli_waris_id, status,
+          created_by, created_at, updated_at
 `
 
 type CreateBerkasParams struct {
-	NomorSurat           string        `json:"nomor_surat"`
 	Tahun                int64         `json:"tahun"`
 	Urutan               int64         `json:"urutan"`
-	Tanggal              string        `json:"tanggal"`
+	RegNoCamat           string        `json:"reg_no_camat"`
+	RegNoLurah           string        `json:"reg_no_lurah"`
+	TanggalSurat         string        `json:"tanggal_surat"`
 	TempatTinggalPewaris string        `json:"tempat_tinggal_pewaris"`
 	CreatedBy            sql.NullInt64 `json:"created_by"`
 }
 
 func (q *Queries) CreateBerkas(ctx context.Context, arg CreateBerkasParams) (BerkasWaris, error) {
 	row := q.db.QueryRowContext(ctx, createBerkas,
-		arg.NomorSurat,
 		arg.Tahun,
 		arg.Urutan,
-		arg.Tanggal,
+		arg.RegNoCamat,
+		arg.RegNoLurah,
+		arg.TanggalSurat,
 		arg.TempatTinggalPewaris,
 		arg.CreatedBy,
 	)
 	var i BerkasWaris
 	err := row.Scan(
 		&i.ID,
-		&i.NomorSurat,
 		&i.Tahun,
 		&i.Urutan,
-		&i.Tanggal,
+		&i.RegNoCamat,
+		&i.RegNoLurah,
+		&i.TanggalRegCamat,
+		&i.TanggalRegLurah,
+		&i.TanggalSurat,
 		&i.TempatTinggalPewaris,
 		&i.PenerimaKuasaAhliWarisID,
 		&i.Status,
@@ -119,22 +137,28 @@ func (q *Queries) CreateBerkas(ctx context.Context, arg CreateBerkasParams) (Ber
 	return i, err
 }
 
-const createHarta = `-- name: CreateHarta :one
-INSERT INTO harta (berkas_id, deskripsi)
-VALUES (?, ?)
-RETURNING id, berkas_id, deskripsi
+const createKuasaItem = `-- name: CreateKuasaItem :one
+INSERT INTO kuasa_item (berkas_id, urutan, deskripsi)
+VALUES (?, ?, ?)
+RETURNING id, berkas_id, urutan, deskripsi
 `
 
-type CreateHartaParams struct {
+type CreateKuasaItemParams struct {
 	BerkasID  int64  `json:"berkas_id"`
+	Urutan    int64  `json:"urutan"`
 	Deskripsi string `json:"deskripsi"`
 }
 
-// HARTA (editable)
-func (q *Queries) CreateHarta(ctx context.Context, arg CreateHartaParams) (Harta, error) {
-	row := q.db.QueryRowContext(ctx, createHarta, arg.BerkasID, arg.Deskripsi)
-	var i Harta
-	err := row.Scan(&i.ID, &i.BerkasID, &i.Deskripsi)
+// KUASA ITEM (editable)
+func (q *Queries) CreateKuasaItem(ctx context.Context, arg CreateKuasaItemParams) (KuasaItem, error) {
+	row := q.db.QueryRowContext(ctx, createKuasaItem, arg.BerkasID, arg.Urutan, arg.Deskripsi)
+	var i KuasaItem
+	err := row.Scan(
+		&i.ID,
+		&i.BerkasID,
+		&i.Urutan,
+		&i.Deskripsi,
+	)
 	return i, err
 }
 
@@ -171,16 +195,19 @@ func (q *Queries) CreatePejabat(ctx context.Context, arg CreatePejabatParams) (P
 }
 
 const createPewaris = `-- name: CreatePewaris :one
-INSERT INTO pewaris (berkas_id, nama, nik, tgl_meninggal, no_surat_kematian, tgl_surat_kematian)
-VALUES (?, ?, ?, ?, ?, ?)
-RETURNING id, berkas_id, nama, nik, tgl_meninggal, no_surat_kematian, tgl_surat_kematian
+INSERT INTO pewaris (berkas_id, urutan, nama, nik, status, tgl_meninggal, instansi_kematian, no_surat_kematian, tgl_surat_kematian)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, berkas_id, urutan, nama, nik, status, tgl_meninggal, instansi_kematian, no_surat_kematian, tgl_surat_kematian
 `
 
 type CreatePewarisParams struct {
 	BerkasID         int64  `json:"berkas_id"`
+	Urutan           int64  `json:"urutan"`
 	Nama             string `json:"nama"`
 	Nik              string `json:"nik"`
+	Status           string `json:"status"`
 	TglMeninggal     string `json:"tgl_meninggal"`
+	InstansiKematian string `json:"instansi_kematian"`
 	NoSuratKematian  string `json:"no_surat_kematian"`
 	TglSuratKematian string `json:"tgl_surat_kematian"`
 }
@@ -188,9 +215,12 @@ type CreatePewarisParams struct {
 func (q *Queries) CreatePewaris(ctx context.Context, arg CreatePewarisParams) (Pewaris, error) {
 	row := q.db.QueryRowContext(ctx, createPewaris,
 		arg.BerkasID,
+		arg.Urutan,
 		arg.Nama,
 		arg.Nik,
+		arg.Status,
 		arg.TglMeninggal,
+		arg.InstansiKematian,
 		arg.NoSuratKematian,
 		arg.TglSuratKematian,
 	)
@@ -198,9 +228,12 @@ func (q *Queries) CreatePewaris(ctx context.Context, arg CreatePewarisParams) (P
 	err := row.Scan(
 		&i.ID,
 		&i.BerkasID,
+		&i.Urutan,
 		&i.Nama,
 		&i.Nik,
+		&i.Status,
 		&i.TglMeninggal,
+		&i.InstansiKematian,
 		&i.NoSuratKematian,
 		&i.TglSuratKematian,
 	)
@@ -208,25 +241,29 @@ func (q *Queries) CreatePewaris(ctx context.Context, arg CreatePewarisParams) (P
 }
 
 const createSaksi = `-- name: CreateSaksi :exec
-INSERT INTO saksi (berkas_id, nama, ttl, alamat, nik, hubungan)
-VALUES (?, ?, ?, ?, ?, ?)
+INSERT INTO saksi (berkas_id, urutan, nama, tempat_lahir, tgl_lahir, alamat, nik, hubungan)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateSaksiParams struct {
-	BerkasID int64          `json:"berkas_id"`
-	Nama     string         `json:"nama"`
-	Ttl      sql.NullString `json:"ttl"`
-	Alamat   sql.NullString `json:"alamat"`
-	Nik      sql.NullString `json:"nik"`
-	Hubungan sql.NullString `json:"hubungan"`
+	BerkasID    int64          `json:"berkas_id"`
+	Urutan      int64          `json:"urutan"`
+	Nama        string         `json:"nama"`
+	TempatLahir sql.NullString `json:"tempat_lahir"`
+	TglLahir    sql.NullString `json:"tgl_lahir"`
+	Alamat      sql.NullString `json:"alamat"`
+	Nik         sql.NullString `json:"nik"`
+	Hubungan    sql.NullString `json:"hubungan"`
 }
 
 // SAKSI
 func (q *Queries) CreateSaksi(ctx context.Context, arg CreateSaksiParams) error {
 	_, err := q.db.ExecContext(ctx, createSaksi,
 		arg.BerkasID,
+		arg.Urutan,
 		arg.Nama,
-		arg.Ttl,
+		arg.TempatLahir,
+		arg.TglLahir,
 		arg.Alamat,
 		arg.Nik,
 		arg.Hubungan,
@@ -278,12 +315,12 @@ func (q *Queries) DeactivatePejabatByJabatan(ctx context.Context, jabatan string
 	return err
 }
 
-const deleteHarta = `-- name: DeleteHarta :exec
-DELETE FROM harta WHERE id = ?
+const deleteKuasaItem = `-- name: DeleteKuasaItem :exec
+DELETE FROM kuasa_item WHERE id = ?
 `
 
-func (q *Queries) DeleteHarta(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteHarta, id)
+func (q *Queries) DeleteKuasaItem(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteKuasaItem, id)
 	return err
 }
 
@@ -315,7 +352,7 @@ func (q *Queries) EnsurePengaturanRow(ctx context.Context) error {
 }
 
 const getAhliWaris = `-- name: GetAhliWaris :one
-SELECT id, berkas_id, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan
+SELECT id, berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, tempat_lahir, tgl_lahir, pekerjaan
 FROM ahli_waris
 WHERE id = ?
 `
@@ -326,6 +363,7 @@ func (q *Queries) GetAhliWaris(ctx context.Context, id int64) (AhliWaris, error)
 	err := row.Scan(
 		&i.ID,
 		&i.BerkasID,
+		&i.Urutan,
 		&i.Nama,
 		&i.Nik,
 		&i.Umur,
@@ -333,13 +371,17 @@ func (q *Queries) GetAhliWaris(ctx context.Context, id int64) (AhliWaris, error)
 		&i.Agama,
 		&i.Alamat,
 		&i.Keterangan,
+		&i.TempatLahir,
+		&i.TglLahir,
+		&i.Pekerjaan,
 	)
 	return i, err
 }
 
 const getBerkas = `-- name: GetBerkas :one
-SELECT id, nomor_surat, tahun, urutan, tanggal, tempat_tinggal_pewaris,
-       penerima_kuasa_ahli_waris_id, status, created_by, created_at, updated_at
+SELECT id, tahun, urutan, reg_no_camat, reg_no_lurah, tanggal_reg_camat, tanggal_reg_lurah,
+       tanggal_surat, tempat_tinggal_pewaris, penerima_kuasa_ahli_waris_id, status,
+       created_by, created_at, updated_at
 FROM berkas_waris
 WHERE id = ?
 `
@@ -349,10 +391,13 @@ func (q *Queries) GetBerkas(ctx context.Context, id int64) (BerkasWaris, error) 
 	var i BerkasWaris
 	err := row.Scan(
 		&i.ID,
-		&i.NomorSurat,
 		&i.Tahun,
 		&i.Urutan,
-		&i.Tanggal,
+		&i.RegNoCamat,
+		&i.RegNoLurah,
+		&i.TanggalRegCamat,
+		&i.TanggalRegLurah,
+		&i.TanggalSurat,
 		&i.TempatTinggalPewaris,
 		&i.PenerimaKuasaAhliWarisID,
 		&i.Status,
@@ -363,14 +408,19 @@ func (q *Queries) GetBerkas(ctx context.Context, id int64) (BerkasWaris, error) 
 	return i, err
 }
 
-const getHarta = `-- name: GetHarta :one
-SELECT id, berkas_id, deskripsi FROM harta WHERE id = ?
+const getKuasaItem = `-- name: GetKuasaItem :one
+SELECT id, berkas_id, urutan, deskripsi FROM kuasa_item WHERE id = ?
 `
 
-func (q *Queries) GetHarta(ctx context.Context, id int64) (Harta, error) {
-	row := q.db.QueryRowContext(ctx, getHarta, id)
-	var i Harta
-	err := row.Scan(&i.ID, &i.BerkasID, &i.Deskripsi)
+func (q *Queries) GetKuasaItem(ctx context.Context, id int64) (KuasaItem, error) {
+	row := q.db.QueryRowContext(ctx, getKuasaItem, id)
+	var i KuasaItem
+	err := row.Scan(
+		&i.ID,
+		&i.BerkasID,
+		&i.Urutan,
+		&i.Deskripsi,
+	)
 	return i, err
 }
 
@@ -429,7 +479,7 @@ func (q *Queries) GetPejabatAktif(ctx context.Context, jabatan string) (Pejabat,
 
 const getPengaturan = `-- name: GetPengaturan :one
 
-SELECT id, nama_kelurahan, kecamatan, kabupaten, provinsi, format_nomor
+SELECT id, nama_kelurahan, kecamatan, kota, kode_kecamatan, kode_kelurahan, instansi_kematian
 FROM pengaturan
 WHERE id = 1
 `
@@ -444,9 +494,10 @@ func (q *Queries) GetPengaturan(ctx context.Context) (Pengaturan, error) {
 		&i.ID,
 		&i.NamaKelurahan,
 		&i.Kecamatan,
-		&i.Kabupaten,
-		&i.Provinsi,
-		&i.FormatNomor,
+		&i.Kota,
+		&i.KodeKecamatan,
+		&i.KodeKelurahan,
+		&i.InstansiKematian,
 	)
 	return i, err
 }
@@ -498,10 +549,10 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 }
 
 const listAhliWarisByBerkas = `-- name: ListAhliWarisByBerkas :many
-SELECT id, berkas_id, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan
+SELECT id, berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, tempat_lahir, tgl_lahir, pekerjaan
 FROM ahli_waris
 WHERE berkas_id = ?
-ORDER BY id
+ORDER BY urutan, id
 `
 
 func (q *Queries) ListAhliWarisByBerkas(ctx context.Context, berkasID int64) ([]AhliWaris, error) {
@@ -516,6 +567,7 @@ func (q *Queries) ListAhliWarisByBerkas(ctx context.Context, berkasID int64) ([]
 		if err := rows.Scan(
 			&i.ID,
 			&i.BerkasID,
+			&i.Urutan,
 			&i.Nama,
 			&i.Nik,
 			&i.Umur,
@@ -523,6 +575,9 @@ func (q *Queries) ListAhliWarisByBerkas(ctx context.Context, berkasID int64) ([]
 			&i.Agama,
 			&i.Alamat,
 			&i.Keterangan,
+			&i.TempatLahir,
+			&i.TglLahir,
+			&i.Pekerjaan,
 		); err != nil {
 			return nil, err
 		}
@@ -538,8 +593,9 @@ func (q *Queries) ListAhliWarisByBerkas(ctx context.Context, berkasID int64) ([]
 }
 
 const listBerkas = `-- name: ListBerkas :many
-SELECT id, nomor_surat, tahun, urutan, tanggal, tempat_tinggal_pewaris,
-       penerima_kuasa_ahli_waris_id, status, created_by, created_at, updated_at
+SELECT id, tahun, urutan, reg_no_camat, reg_no_lurah, tanggal_reg_camat, tanggal_reg_lurah,
+       tanggal_surat, tempat_tinggal_pewaris, penerima_kuasa_ahli_waris_id, status,
+       created_by, created_at, updated_at
 FROM berkas_waris
 ORDER BY created_at DESC
 `
@@ -555,10 +611,13 @@ func (q *Queries) ListBerkas(ctx context.Context) ([]BerkasWaris, error) {
 		var i BerkasWaris
 		if err := rows.Scan(
 			&i.ID,
-			&i.NomorSurat,
 			&i.Tahun,
 			&i.Urutan,
-			&i.Tanggal,
+			&i.RegNoCamat,
+			&i.RegNoLurah,
+			&i.TanggalRegCamat,
+			&i.TanggalRegLurah,
+			&i.TanggalSurat,
 			&i.TempatTinggalPewaris,
 			&i.PenerimaKuasaAhliWarisID,
 			&i.Status,
@@ -579,23 +638,28 @@ func (q *Queries) ListBerkas(ctx context.Context) ([]BerkasWaris, error) {
 	return items, nil
 }
 
-const listHartaByBerkas = `-- name: ListHartaByBerkas :many
-SELECT id, berkas_id, deskripsi
-FROM harta
+const listKuasaItemByBerkas = `-- name: ListKuasaItemByBerkas :many
+SELECT id, berkas_id, urutan, deskripsi
+FROM kuasa_item
 WHERE berkas_id = ?
-ORDER BY id
+ORDER BY urutan, id
 `
 
-func (q *Queries) ListHartaByBerkas(ctx context.Context, berkasID int64) ([]Harta, error) {
-	rows, err := q.db.QueryContext(ctx, listHartaByBerkas, berkasID)
+func (q *Queries) ListKuasaItemByBerkas(ctx context.Context, berkasID int64) ([]KuasaItem, error) {
+	rows, err := q.db.QueryContext(ctx, listKuasaItemByBerkas, berkasID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Harta{}
+	items := []KuasaItem{}
 	for rows.Next() {
-		var i Harta
-		if err := rows.Scan(&i.ID, &i.BerkasID, &i.Deskripsi); err != nil {
+		var i KuasaItem
+		if err := rows.Scan(
+			&i.ID,
+			&i.BerkasID,
+			&i.Urutan,
+			&i.Deskripsi,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -677,10 +741,10 @@ func (q *Queries) ListPejabat(ctx context.Context) ([]Pejabat, error) {
 }
 
 const listPewarisByBerkas = `-- name: ListPewarisByBerkas :many
-SELECT id, berkas_id, nama, nik, tgl_meninggal, no_surat_kematian, tgl_surat_kematian
+SELECT id, berkas_id, urutan, nama, nik, status, tgl_meninggal, instansi_kematian, no_surat_kematian, tgl_surat_kematian
 FROM pewaris
 WHERE berkas_id = ?
-ORDER BY id
+ORDER BY urutan, id
 `
 
 func (q *Queries) ListPewarisByBerkas(ctx context.Context, berkasID int64) ([]Pewaris, error) {
@@ -695,9 +759,12 @@ func (q *Queries) ListPewarisByBerkas(ctx context.Context, berkasID int64) ([]Pe
 		if err := rows.Scan(
 			&i.ID,
 			&i.BerkasID,
+			&i.Urutan,
 			&i.Nama,
 			&i.Nik,
+			&i.Status,
 			&i.TglMeninggal,
+			&i.InstansiKematian,
 			&i.NoSuratKematian,
 			&i.TglSuratKematian,
 		); err != nil {
@@ -715,10 +782,10 @@ func (q *Queries) ListPewarisByBerkas(ctx context.Context, berkasID int64) ([]Pe
 }
 
 const listSaksiByBerkas = `-- name: ListSaksiByBerkas :many
-SELECT id, berkas_id, nama, ttl, alamat, nik, hubungan
+SELECT id, berkas_id, urutan, nama, tempat_lahir, tgl_lahir, alamat, nik, hubungan
 FROM saksi
 WHERE berkas_id = ?
-ORDER BY id
+ORDER BY urutan, id
 `
 
 func (q *Queries) ListSaksiByBerkas(ctx context.Context, berkasID int64) ([]Saksi, error) {
@@ -733,8 +800,10 @@ func (q *Queries) ListSaksiByBerkas(ctx context.Context, berkasID int64) ([]Saks
 		if err := rows.Scan(
 			&i.ID,
 			&i.BerkasID,
+			&i.Urutan,
 			&i.Nama,
-			&i.Ttl,
+			&i.TempatLahir,
+			&i.TglLahir,
 			&i.Alamat,
 			&i.Nik,
 			&i.Hubungan,
@@ -770,15 +839,17 @@ func (q *Queries) NextUrutan(ctx context.Context, tahun int64) (int64, error) {
 }
 
 const searchBerkas = `-- name: SearchBerkas :many
-SELECT b.id, b.nomor_surat, b.tahun, b.urutan, b.tanggal, b.tempat_tinggal_pewaris,
-       b.penerima_kuasa_ahli_waris_id, b.status, b.created_by, b.created_at, b.updated_at
+SELECT b.id, b.tahun, b.urutan, b.reg_no_camat, b.reg_no_lurah, b.tanggal_reg_camat, b.tanggal_reg_lurah,
+       b.tanggal_surat, b.tempat_tinggal_pewaris, b.penerima_kuasa_ahli_waris_id, b.status,
+       b.created_by, b.created_at, b.updated_at
 FROM berkas_waris b
 WHERE EXISTS (
     SELECT 1 FROM pewaris p
     WHERE p.berkas_id = b.id
       AND (p.nama LIKE '%' || ?1 || '%' OR p.nik LIKE '%' || ?1 || '%')
 )
-OR b.nomor_surat LIKE '%' || ?1 || '%'
+OR b.reg_no_camat LIKE '%' || ?1 || '%'
+OR b.reg_no_lurah LIKE '%' || ?1 || '%'
 ORDER BY b.created_at DESC
 `
 
@@ -793,10 +864,13 @@ func (q *Queries) SearchBerkas(ctx context.Context, dollar_1 sql.NullString) ([]
 		var i BerkasWaris
 		if err := rows.Scan(
 			&i.ID,
-			&i.NomorSurat,
 			&i.Tahun,
 			&i.Urutan,
-			&i.Tanggal,
+			&i.RegNoCamat,
+			&i.RegNoLurah,
+			&i.TanggalRegCamat,
+			&i.TanggalRegLurah,
+			&i.TanggalSurat,
 			&i.TempatTinggalPewaris,
 			&i.PenerimaKuasaAhliWarisID,
 			&i.Status,
@@ -842,17 +916,42 @@ func (q *Queries) TouchBerkas(ctx context.Context, id int64) error {
 	return err
 }
 
-const updateHarta = `-- name: UpdateHarta :exec
-UPDATE harta SET deskripsi = ? WHERE id = ?
+const updateAhliWarisPelengkap = `-- name: UpdateAhliWarisPelengkap :exec
+UPDATE ahli_waris
+SET tempat_lahir = ?, tgl_lahir = ?, pekerjaan = ?
+WHERE id = ? AND berkas_id = ?
 `
 
-type UpdateHartaParams struct {
+type UpdateAhliWarisPelengkapParams struct {
+	TempatLahir sql.NullString `json:"tempat_lahir"`
+	TglLahir    sql.NullString `json:"tgl_lahir"`
+	Pekerjaan   sql.NullString `json:"pekerjaan"`
+	ID          int64          `json:"id"`
+	BerkasID    int64          `json:"berkas_id"`
+}
+
+func (q *Queries) UpdateAhliWarisPelengkap(ctx context.Context, arg UpdateAhliWarisPelengkapParams) error {
+	_, err := q.db.ExecContext(ctx, updateAhliWarisPelengkap,
+		arg.TempatLahir,
+		arg.TglLahir,
+		arg.Pekerjaan,
+		arg.ID,
+		arg.BerkasID,
+	)
+	return err
+}
+
+const updateKuasaItem = `-- name: UpdateKuasaItem :exec
+UPDATE kuasa_item SET deskripsi = ? WHERE id = ?
+`
+
+type UpdateKuasaItemParams struct {
 	Deskripsi string `json:"deskripsi"`
 	ID        int64  `json:"id"`
 }
 
-func (q *Queries) UpdateHarta(ctx context.Context, arg UpdateHartaParams) error {
-	_, err := q.db.ExecContext(ctx, updateHarta, arg.Deskripsi, arg.ID)
+func (q *Queries) UpdateKuasaItem(ctx context.Context, arg UpdateKuasaItemParams) error {
+	_, err := q.db.ExecContext(ctx, updateKuasaItem, arg.Deskripsi, arg.ID)
 	return err
 }
 
@@ -913,31 +1012,34 @@ func (q *Queries) UpsertNomorAwal(ctx context.Context, arg UpsertNomorAwalParams
 }
 
 const upsertPengaturan = `-- name: UpsertPengaturan :exec
-INSERT INTO pengaturan (id, nama_kelurahan, kecamatan, kabupaten, provinsi, format_nomor)
-VALUES (1, ?, ?, ?, ?, ?)
+INSERT INTO pengaturan (id, nama_kelurahan, kecamatan, kota, kode_kecamatan, kode_kelurahan, instansi_kematian)
+VALUES (1, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(id) DO UPDATE SET
-    nama_kelurahan = excluded.nama_kelurahan,
-    kecamatan      = excluded.kecamatan,
-    kabupaten      = excluded.kabupaten,
-    provinsi       = excluded.provinsi,
-    format_nomor   = excluded.format_nomor
+    nama_kelurahan    = excluded.nama_kelurahan,
+    kecamatan         = excluded.kecamatan,
+    kota              = excluded.kota,
+    kode_kecamatan    = excluded.kode_kecamatan,
+    kode_kelurahan    = excluded.kode_kelurahan,
+    instansi_kematian = excluded.instansi_kematian
 `
 
 type UpsertPengaturanParams struct {
-	NamaKelurahan sql.NullString `json:"nama_kelurahan"`
-	Kecamatan     sql.NullString `json:"kecamatan"`
-	Kabupaten     sql.NullString `json:"kabupaten"`
-	Provinsi      sql.NullString `json:"provinsi"`
-	FormatNomor   sql.NullString `json:"format_nomor"`
+	NamaKelurahan    sql.NullString `json:"nama_kelurahan"`
+	Kecamatan        sql.NullString `json:"kecamatan"`
+	Kota             sql.NullString `json:"kota"`
+	KodeKecamatan    sql.NullString `json:"kode_kecamatan"`
+	KodeKelurahan    sql.NullString `json:"kode_kelurahan"`
+	InstansiKematian sql.NullString `json:"instansi_kematian"`
 }
 
 func (q *Queries) UpsertPengaturan(ctx context.Context, arg UpsertPengaturanParams) error {
 	_, err := q.db.ExecContext(ctx, upsertPengaturan,
 		arg.NamaKelurahan,
 		arg.Kecamatan,
-		arg.Kabupaten,
-		arg.Provinsi,
-		arg.FormatNomor,
+		arg.Kota,
+		arg.KodeKecamatan,
+		arg.KodeKelurahan,
+		arg.InstansiKematian,
 	)
 	return err
 }
