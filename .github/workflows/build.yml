@@ -8,6 +8,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write   # perlu untuk membuat GitHub Release saat push tag
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -47,11 +50,20 @@ jobs:
           CGO_ENABLED: '0'
           GOOS: windows
           GOARCH: amd64
-        run: go build -ldflags="-H windowsgui -s -w" -o surat-waris.exe .
+        run: go build -ldflags="-H windowsgui -s -w" -o siwaris.exe .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: surat-waris-windows-amd64
-          path: surat-waris.exe
+          name: siwaris-windows-amd64
+          path: siwaris.exe
           if-no-files-found: error
+
+      # Push tag v* (mis. v1.0.0) → rilis otomatis; siwaris.exe bisa diunduh
+      # langsung dari halaman Releases tanpa login GitHub.
+      - name: Buat GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: siwaris.exe
+          generate_release_notes: true

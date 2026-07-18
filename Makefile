@@ -2,7 +2,7 @@
 # Catatan: deliverable HARUS bisa dibangun tanpa C compiler (CGO_ENABLED=0).
 
 BINARY      := surat-waris
-WIN_BINARY  := surat-waris.exe
+WIN_BINARY  := siwaris.exe
 SQLC        := ./.tools/sqlc.exe
 
 .PHONY: dev build build-win build-frontend clean tidy vet generate

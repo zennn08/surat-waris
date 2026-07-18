@@ -27,7 +27,8 @@ Surat Pernyataan Ahli Waris) dalam 3 halaman A4.
 
 ## 1. Menjalankan Aplikasi
 
-1. Klik dua kali `surat-waris.exe`.
+1. Unduh `siwaris.exe` dari halaman *Releases* (atau minta file-nya ke pengelola),
+   lalu klik dua kali.
 2. Browser terbuka otomatis ke alamat aplikasi (biasanya `http://localhost:8080`).
 3. Seluruh data tersimpan di file `surat-waris.db` **di folder yang sama dengan
    exe** — tidak butuh internet, dan cukup salin folder itu untuk backup.

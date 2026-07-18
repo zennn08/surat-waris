@@ -1,4 +1,4 @@
-# Surat Waris
+# SIWARIS — Sistem Informasi Surat Ahli Waris
 
 Aplikasi desktop **standalone** untuk membuat & mencetak surat waris di kantor kelurahan.
 Satu file `.exe` tinggal double-click — server Go + UI Svelte (embedded) + database SQLite lokal.
@@ -21,10 +21,12 @@ Satu kali input menghasilkan **3 surat** siap cetak:
 
 ## Menjalankan (end user)
 
-Double-click `surat-waris.exe`. Browser default terbuka otomatis ke `http://localhost:8080`
-(otomatis pindah port bila 8080 terpakai). Database dibuat otomatis di samping exe.
+**Unduh `siwaris.exe` dari halaman [Releases](../../releases/latest)**, lalu double-click.
+Browser default terbuka otomatis ke `http://localhost:8080` (otomatis pindah port bila
+8080 terpakai). Database dibuat otomatis di samping exe.
 
 Login awal: **admin** / **admin123** (wajib ganti password saat login pertama).
+Panduan lengkap bergambar: [docs/panduan-penggunaan.md](docs/panduan-penggunaan.md).
 
 ## Build dari source
 
@@ -35,10 +37,10 @@ Butuh **Go 1.25+** dan **Node 20 + Yarn**. Frontend harus dibuild lebih dulu kar
 cd frontend && yarn install && yarn build && cd ..
 
 # 2a. Build lokal (ada jendela konsol untuk log)
-go build -o surat-waris.exe .
+go build -o siwaris.exe .
 
 # 2b. Deliverable Windows (tanpa jendela konsol, binary kecil, tanpa C compiler)
-CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-H windowsgui -s -w" -o surat-waris.exe .
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-H windowsgui -s -w" -o siwaris.exe .
 ```
 
 Atau lewat Makefile: `make build-frontend && make build-win`.
@@ -51,11 +53,21 @@ Hasil sqlc sudah di-commit; regenerate hanya bila mengubah `schema.sql`/`queries
 make generate   # menjalankan ./.tools/sqlc.exe generate
 ```
 
-## CI
+## CI/CD & Rilis
 
-`.github/workflows/build.yml` menjalankan test + build frontend + cross-compile Windows exe,
-lalu meng-upload `surat-waris.exe` sebagai **artifact** di setiap push ke `main` (dan bisa
-dipicu manual via *workflow_dispatch*).
+`.github/workflows/build.yml` menjalankan test + build frontend + cross-compile Windows exe
+(`siwaris.exe`) di setiap push/PR ke `main` (artifact, bisa juga dipicu manual via
+*workflow_dispatch*).
+
+**Merilis versi baru** (agar user bisa unduh langsung tanpa login GitHub):
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Push tag `v*` otomatis membuat **GitHub Release** berisi `siwaris.exe` beserta
+catatan rilis — tautan unduhnya: `https://github.com/zennn08/surat-waris/releases/latest`.
 
 ## Struktur
 
