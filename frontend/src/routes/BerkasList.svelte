@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import { api } from '../lib/api.js'
   import { navigate } from '../lib/router.js'
+  import { fmtDate } from '../lib/format.js'
 
   let items = []
   let loading = true
@@ -38,10 +39,12 @@
   <h1 class="mb-0">Daftar Berkas Waris</h1>
   <button class="btn btn-primary" on:click={() => navigate('/berkas/baru')}>+ Buat Berkas Baru</button>
 </div>
+<p class="page-sub">Satu berkas berisi data lengkap satu urusan waris dan mencetak 3 surat sekaligus.</p>
 
 <div class="card">
   <div class="field mb-0">
-    <input placeholder="Cari reg. no, nama atau NIK pewaris…" bind:value={q} on:input={onSearch} />
+    <label for="cari">Cari berkas</label>
+    <input id="cari" placeholder="Ketik nomor registrasi, nama, atau NIK pewaris…" bind:value={q} on:input={onSearch} />
   </div>
 </div>
 
@@ -51,31 +54,39 @@
   {#if loading}
     <div class="spinner">Memuat…</div>
   {:else if items.length === 0}
-    <div class="empty">Belum ada berkas. Klik “Buat Berkas Baru”.</div>
+    <div class="empty">
+      {#if q.trim()}
+        Tidak ada berkas yang cocok dengan “{q.trim()}”. Coba kata kunci lain.
+      {:else}
+        Belum ada berkas. Klik “Buat Berkas Baru” — nomor registrasi dibuat otomatis saat berkas disimpan.
+      {/if}
+    </div>
   {:else}
-    <table>
-      <thead>
-        <tr>
-          <th style="width:210px;">Reg. No. Camat</th>
-          <th>Pewaris (Alm.)</th>
-          <th style="width:110px;">Tanggal</th>
-          <th style="width:90px;">Status</th>
-          <th style="width:80px;"></th>
-        </tr>
-      </thead>
-      <tbody>
-        {#each items as b}
+    <div class="table-wrap">
+      <table>
+        <thead>
           <tr>
-            <td class="mono">{b.reg_no_camat}</td>
-            <td>{pewarisNames(b)}</td>
-            <td>{b.tanggal_surat}</td>
-            <td><span class="badge badge-green">{b.status}</span></td>
-            <td class="right">
-              <a class="btn btn-sm" href={'#/berkas/' + b.id}>Detail</a>
-            </td>
+            <th style="width:210px;">Reg. No. Camat</th>
+            <th>Pewaris (Alm.)</th>
+            <th style="width:140px;">Tanggal Surat</th>
+            <th style="width:90px;">Status</th>
+            <th style="width:80px;"></th>
           </tr>
-        {/each}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {#each items as b}
+            <tr>
+              <td class="mono">{b.reg_no_camat}</td>
+              <td>{pewarisNames(b)}</td>
+              <td>{fmtDate(b.tanggal_surat)}</td>
+              <td><span class="badge badge-green">{b.status === 'terbit' ? 'Terbit' : b.status}</span></td>
+              <td class="right">
+                <a class="btn btn-sm" href={'#/berkas/' + b.id}>Buka</a>
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
   {/if}
 </div>

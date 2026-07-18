@@ -67,7 +67,7 @@ func main() {
 	srv := &http.Server{Handler: r}
 
 	go func() {
-		log.Printf("Surat Waris berjalan di %s", url)
+		log.Printf("SIWARIS berjalan di %s", url)
 		if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("server error: %v", err)
 		}

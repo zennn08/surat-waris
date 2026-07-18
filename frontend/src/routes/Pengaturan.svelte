@@ -91,7 +91,8 @@
     </form>
 
     {#if nomorAwal.length > 0}
-      <table class="mt-2">
+      <div class="table-wrap mt-2">
+      <table>
         <thead><tr><th>Tahun</th><th>Nomor Terakhir Manual</th><th>Digital Mulai Dari</th><th style="width:80px;"></th></tr></thead>
         <tbody>
           {#each nomorAwal as n}
@@ -104,6 +105,7 @@
           {/each}
         </tbody>
       </table>
+      </div>
     {:else}
       <div class="muted small mt-2">Belum ada setelan. Tanpa setelan, penomoran mulai dari 1 tiap tahun.</div>
     {/if}

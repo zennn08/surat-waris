@@ -2,6 +2,7 @@
   import { api } from '../lib/api.js'
   import { navigate } from '../lib/router.js'
   import { notify } from '../lib/stores.js'
+  import { fmtDate } from '../lib/format.js'
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -16,6 +17,16 @@
 
   let error = ''
   let busy = false
+
+  // Wizard
+  const STEPS = ['Data Berkas', 'Pewaris', 'Ahli Waris', 'Saksi', 'Surat Kuasa', 'Periksa & Simpan']
+  let step = 1
+  function goTo(n) {
+    step = Math.min(Math.max(n, 1), STEPS.length)
+    window.scrollTo(0, 0)
+  }
+  function next() { goTo(step + 1) }
+  function back() { goTo(step - 1) }
 
   function emptyPewaris(status = 'suami') {
     return { nama: '', nik: '', status, tgl_meninggal: '', instansi_kematian: '', no_surat_kematian: '', tgl_surat_kematian: '' }
@@ -89,163 +100,297 @@
       navigate('/berkas/' + created.id)
     } catch (e) {
       error = e.message
+      window.scrollTo(0, 0)
     } finally {
       busy = false
     }
   }
+
+  function namaAtau(a, i) { return a.nama ? a.nama : 'Ahli Waris ' + (i + 1) }
 </script>
 
 <div class="card-title">
   <h1 class="mb-0">Buat Berkas Waris</h1>
   <div class="flex gap">
     <button type="button" class="btn btn-sm" on:click={fillSample}>Isi Data Contoh</button>
-    <a class="btn btn-ghost" href="#/">← Kembali</a>
+    <a class="btn btn-ghost" href="#/">Batal</a>
   </div>
+</div>
+<p class="page-sub">
+  Ikuti langkah satu per satu. Isian Anda tidak hilang saat berpindah langkah,
+  dan semuanya bisa diperiksa lagi di langkah terakhir sebelum disimpan.
+</p>
+
+<!-- Indikator langkah -->
+<div class="wiz-steps" role="navigation" aria-label="Langkah pengisian">
+  {#each STEPS as label, i}
+    <button
+      type="button"
+      class="wiz-step"
+      class:done={step > i + 1}
+      class:active={step === i + 1}
+      class:clickable={step > i + 1}
+      disabled={step <= i + 1}
+      on:click={() => step > i + 1 && goTo(i + 1)}
+    >
+      <span class="num">{step > i + 1 ? '✓' : i + 1}</span>
+      <span class="lbl">{label}</span>
+    </button>
+  {/each}
 </div>
 
 {#if error}<div class="alert alert-error">{error}</div>{/if}
 
-<form on:submit|preventDefault={submit}>
-  <!-- Data berkas -->
-  <div class="card">
-    <h3>Data Berkas</h3>
-    <div class="row row-2">
-      <div class="field">
-        <label for="tgl">Tanggal Surat</label>
-        <input id="tgl" type="date" bind:value={tanggal_surat} required />
-      </div>
-      <div class="field">
-        <label for="tt">Tempat Tinggal Terakhir Pewaris</label>
-        <input id="tt" bind:value={tempat_tinggal_pewaris} placeholder="mis. Jl. Merdeka Baru RT.007" required />
+<!-- Langkah 1: Data Berkas -->
+{#if step === 1}
+  <form on:submit|preventDefault={next}>
+    <div class="card">
+      <h2>Langkah 1: Data Berkas</h2>
+      <div class="section-sub">Tanggal yang tercetak pada surat dan alamat tinggal terakhir almarhum/ah.</div>
+      <div class="row row-2">
+        <div class="field">
+          <label for="tgl">Tanggal Surat</label>
+          <input id="tgl" type="date" bind:value={tanggal_surat} required />
+        </div>
+        <div class="field">
+          <label for="tt">Tempat Tinggal Terakhir Pewaris</label>
+          <input id="tt" bind:value={tempat_tinggal_pewaris} placeholder="contoh: Jl. Merdeka Baru RT.007" required />
+        </div>
       </div>
     </div>
-  </div>
+    <div class="wiz-actions">
+      <span></span>
+      <button class="btn btn-primary btn-lg">Lanjut →</button>
+    </div>
+  </form>
+{/if}
 
-  <!-- Pewaris -->
-  <div class="card">
-    <div class="card-title">
-      <div><h3 class="mb-0">Pewaris (Almarhum/ah)</h3><div class="section-sub">Minimal 1, maksimal 2 (mis. suami-istri)</div></div>
-      <button type="button" class="btn btn-sm" on:click={addPewaris} disabled={pewaris.length >= 2}>+ Tambah</button>
-    </div>
-    {#each pewaris as p, i}
-      <div class="item-card">
-        <div class="item-head">
-          <strong>Pewaris {i + 1}</strong>
-          {#if pewaris.length > 1}<button type="button" class="btn btn-sm btn-danger" on:click={() => removePewaris(i)}>Hapus</button>{/if}
-        </div>
-        <div class="row row-3">
-          <div class="field"><label>Nama</label><input bind:value={p.nama} required /></div>
-          <div class="field"><label>NIK</label><input bind:value={p.nik} class="mono" required /></div>
-          <div class="field"><label>Status</label>
-            <select bind:value={p.status}><option value="suami">Suami</option><option value="istri">Istri</option></select>
+<!-- Langkah 2: Pewaris -->
+{#if step === 2}
+  <form on:submit|preventDefault={next}>
+    <div class="card">
+      <h2>Langkah 2: Pewaris (yang meninggal)</h2>
+      <div class="section-sub">Orang yang meninggal dan mewariskan. Bisa 1 orang, atau 2 bila pasangan suami-istri sudah sama-sama meninggal.</div>
+      {#each pewaris as p, i}
+        <div class="item-card">
+          <div class="item-head">
+            <strong>Pewaris {i + 1}</strong>
+            {#if pewaris.length > 1}<button type="button" class="btn btn-sm btn-danger" on:click={() => removePewaris(i)}>Hapus</button>{/if}
           </div>
-        </div>
-        <div class="row row-2">
-          <div class="field"><label>Tgl Meninggal</label><input type="date" bind:value={p.tgl_meninggal} required /></div>
-          <div class="field"><label>Instansi Penerbit Surat Kematian</label><input bind:value={p.instansi_kematian} placeholder="kosongkan = default pengaturan" /></div>
-        </div>
-        <div class="row row-2">
-          <div class="field"><label>No. Surat Kematian</label><input bind:value={p.no_surat_kematian} required /></div>
-          <div class="field"><label>Tgl Surat Kematian</label><input type="date" bind:value={p.tgl_surat_kematian} required /></div>
-        </div>
-      </div>
-    {/each}
-  </div>
-
-  <!-- Ahli Waris -->
-  <div class="card">
-    <div class="card-title">
-      <div><h3 class="mb-0">Ahli Waris</h3><div class="section-sub">Tambah sesuai jumlah ahli waris</div></div>
-      <button type="button" class="btn btn-sm" on:click={addAhli}>+ Tambah</button>
-    </div>
-    {#each ahli_waris as a, i}
-      <div class="item-card">
-        <div class="item-head">
-          <strong>Ahli Waris {i + 1}</strong>
-          {#if penerima_kuasa_index === i}<span class="badge badge-green">Penerima Kuasa</span>{/if}
-          {#if ahli_waris.length > 1}<button type="button" class="btn btn-sm btn-danger" on:click={() => removeAhli(i)}>Hapus</button>{/if}
-        </div>
-        <div class="row row-2">
-          <div class="field"><label>Nama</label><input bind:value={a.nama} required /></div>
-          <div class="field"><label>NIK</label><input bind:value={a.nik} class="mono" required /></div>
-        </div>
-        <div class="row row-3">
-          <div class="field"><label>Umur</label><input type="number" min="0" bind:value={a.umur} /></div>
-          <div class="field"><label>Jenis Kelamin</label>
-            <select bind:value={a.jenis_kelamin}><option value="L">Laki-laki</option><option value="P">Perempuan</option></select>
-          </div>
-          <div class="field"><label>Agama</label><input bind:value={a.agama} /></div>
-        </div>
-        <div class="row row-2">
-          <div class="field"><label>Alamat</label><input bind:value={a.alamat} /></div>
-          <div class="field"><label>Keterangan (mis. Anak, Istri)</label><input bind:value={a.keterangan} /></div>
-        </div>
-        {#if penerima_kuasa_index === i}
-          <div class="divider"></div>
-          <div class="section-sub">Data pelengkap penerima kuasa (dipakai di Surat Kuasa)</div>
           <div class="row row-3">
-            <div class="field"><label>Tempat Lahir</label><input bind:value={a.tempat_lahir} /></div>
-            <div class="field"><label>Tgl Lahir</label><input bind:value={a.tgl_lahir} placeholder="mis. 08-12-1994" /></div>
-            <div class="field"><label>Pekerjaan</label><input bind:value={a.pekerjaan} /></div>
+            <div class="field"><label>Nama Lengkap</label><input bind:value={p.nama} required /></div>
+            <div class="field"><label>NIK</label><input bind:value={p.nik} class="mono" required /></div>
+            <div class="field"><label>Status</label>
+              <select bind:value={p.status}><option value="suami">Suami</option><option value="istri">Istri</option></select>
+            </div>
           </div>
-        {/if}
-      </div>
-    {/each}
-  </div>
-
-  <!-- Saksi -->
-  <div class="card">
-    <h3>Saksi</h3>
-    <div class="section-sub">Tepat 2 orang</div>
-    {#each saksi as s, i}
-      <div class="item-card">
-        <div class="item-head"><strong>Saksi {i + 1}</strong></div>
-        <div class="row row-3">
-          <div class="field"><label>Nama</label><input bind:value={s.nama} required /></div>
-          <div class="field"><label>Tempat Lahir</label><input bind:value={s.tempat_lahir} /></div>
-          <div class="field"><label>Tgl Lahir</label><input bind:value={s.tgl_lahir} placeholder="mis. 1970-05-12" /></div>
+          <div class="row row-2">
+            <div class="field"><label>Tanggal Meninggal</label><input type="date" bind:value={p.tgl_meninggal} required /></div>
+            <div class="field">
+              <label>Instansi Penerbit Surat Kematian</label>
+              <input bind:value={p.instansi_kematian} placeholder="boleh dikosongkan" />
+              <div class="help">Bila kosong, dipakai instansi dari halaman Pengaturan.</div>
+            </div>
+          </div>
+          <div class="row row-2">
+            <div class="field"><label>No. Surat Kematian</label><input bind:value={p.no_surat_kematian} required /></div>
+            <div class="field"><label>Tanggal Surat Kematian</label><input type="date" bind:value={p.tgl_surat_kematian} required /></div>
+          </div>
         </div>
-        <div class="row row-3">
-          <div class="field"><label>NIK</label><input bind:value={s.nik} class="mono" /></div>
-          <div class="field"><label>Alamat</label><input bind:value={s.alamat} /></div>
-          <div class="field"><label>Hubungan dgn Alm.</label><input bind:value={s.hubungan} /></div>
+      {/each}
+      {#if pewaris.length < 2}
+        <button type="button" class="btn" on:click={addPewaris}>+ Tambah Pewaris (pasangan)</button>
+      {/if}
+    </div>
+    <div class="wiz-actions">
+      <button type="button" class="btn btn-lg" on:click={back}>← Kembali</button>
+      <button class="btn btn-primary btn-lg">Lanjut →</button>
+    </div>
+  </form>
+{/if}
+
+<!-- Langkah 3: Ahli Waris -->
+{#if step === 3}
+  <form on:submit|preventDefault={next}>
+    <div class="card">
+      <h2>Langkah 3: Ahli Waris</h2>
+      <div class="section-sub">Semua penerima waris, sesuai urutan yang akan tercetak di surat.</div>
+      {#each ahli_waris as a, i}
+        <div class="item-card">
+          <div class="item-head">
+            <strong>Ahli Waris {i + 1}</strong>
+            {#if ahli_waris.length > 1}<button type="button" class="btn btn-sm btn-danger" on:click={() => removeAhli(i)}>Hapus</button>{/if}
+          </div>
+          <div class="row row-2">
+            <div class="field"><label>Nama Lengkap</label><input bind:value={a.nama} required /></div>
+            <div class="field"><label>NIK</label><input bind:value={a.nik} class="mono" required /></div>
+          </div>
+          <div class="row row-3">
+            <div class="field"><label>Umur</label><input type="number" min="0" bind:value={a.umur} /></div>
+            <div class="field"><label>Jenis Kelamin</label>
+              <select bind:value={a.jenis_kelamin}><option value="L">Laki-laki</option><option value="P">Perempuan</option></select>
+            </div>
+            <div class="field"><label>Agama</label><input bind:value={a.agama} /></div>
+          </div>
+          <div class="row row-2">
+            <div class="field"><label>Alamat</label><input bind:value={a.alamat} /></div>
+            <div class="field"><label>Hubungan dengan Pewaris</label><input bind:value={a.keterangan} placeholder="contoh: Anak" /></div>
+          </div>
         </div>
+      {/each}
+      <button type="button" class="btn" on:click={addAhli}>+ Tambah Ahli Waris</button>
+    </div>
+    <div class="wiz-actions">
+      <button type="button" class="btn btn-lg" on:click={back}>← Kembali</button>
+      <button class="btn btn-primary btn-lg">Lanjut →</button>
+    </div>
+  </form>
+{/if}
+
+<!-- Langkah 4: Saksi -->
+{#if step === 4}
+  <form on:submit|preventDefault={next}>
+    <div class="card">
+      <h2>Langkah 4: Saksi</h2>
+      <div class="section-sub">Tepat 2 orang yang menyaksikan dan ikut menandatangani surat.</div>
+      {#each saksi as s, i}
+        <div class="item-card">
+          <div class="item-head"><strong>Saksi {i + 1}</strong></div>
+          <div class="row row-3">
+            <div class="field"><label>Nama Lengkap</label><input bind:value={s.nama} required /></div>
+            <div class="field"><label>Tempat Lahir</label><input bind:value={s.tempat_lahir} /></div>
+            <div class="field"><label>Tanggal Lahir</label><input bind:value={s.tgl_lahir} placeholder="contoh: 1970-05-12" /></div>
+          </div>
+          <div class="row row-3">
+            <div class="field"><label>NIK</label><input bind:value={s.nik} class="mono" /></div>
+            <div class="field"><label>Alamat</label><input bind:value={s.alamat} /></div>
+            <div class="field"><label>Hubungan dengan Almarhum/ah</label><input bind:value={s.hubungan} placeholder="contoh: Tetangga" /></div>
+          </div>
+        </div>
+      {/each}
+    </div>
+    <div class="wiz-actions">
+      <button type="button" class="btn btn-lg" on:click={back}>← Kembali</button>
+      <button class="btn btn-primary btn-lg">Lanjut →</button>
+    </div>
+  </form>
+{/if}
+
+<!-- Langkah 5: Surat Kuasa -->
+{#if step === 5}
+  <form on:submit|preventDefault={next}>
+    <div class="card">
+      <h2>Langkah 5: Surat Kuasa</h2>
+      <div class="section-sub">
+        Satu ahli waris ditunjuk sebagai penerima kuasa; ahli waris lainnya otomatis menjadi pemberi kuasa.
+        Bagian ini masih bisa diubah setelah berkas disimpan.
       </div>
-    {/each}
-  </div>
 
-  <!-- Surat Kuasa -->
+      <div class="field" style="max-width:460px;">
+        <label>Penerima Kuasa</label>
+        <select bind:value={penerima_kuasa_index}>
+          <option value={null}>— Belum dipilih —</option>
+          {#each ahli_waris as a, i}
+            <option value={i}>{namaAtau(a, i)}</option>
+          {/each}
+        </select>
+      </div>
+
+      {#if penerima_kuasa_index !== null}
+        <div class="section-sub">Data pelengkap penerima kuasa — tercetak pada Surat Kuasa.</div>
+        <div class="row row-3">
+          <div class="field"><label>Tempat Lahir</label><input bind:value={ahli_waris[penerima_kuasa_index].tempat_lahir} /></div>
+          <div class="field"><label>Tanggal Lahir</label><input bind:value={ahli_waris[penerima_kuasa_index].tgl_lahir} placeholder="contoh: 08-12-1994" /></div>
+          <div class="field"><label>Pekerjaan</label><input bind:value={ahli_waris[penerima_kuasa_index].pekerjaan} /></div>
+        </div>
+      {/if}
+
+      <div class="divider"></div>
+
+      <div class="card-title">
+        <div>
+          <h3 class="mb-0">Urusan yang Dikuasakan</h3>
+          <div class="section-sub mb-0">Tuliskan tiap urusan apa adanya, seperti akan tercetak di surat.</div>
+        </div>
+        <button type="button" class="btn btn-sm" on:click={addKuasa}>+ Tambah Urusan</button>
+      </div>
+      {#if kuasa.length === 0}<div class="muted small">Belum ada urusan yang dikuasakan.</div>{/if}
+      {#each kuasa as _, i}
+        <div class="flex gap items-center mt-1">
+          <textarea class="grow" rows="2" placeholder="contoh: Pengurusan administrasi kartu BPJS Ketenagakerjaan Nomor … an. …" bind:value={kuasa[i]}></textarea>
+          <button type="button" class="btn btn-sm btn-danger" on:click={() => removeKuasa(i)}>Hapus</button>
+        </div>
+      {/each}
+    </div>
+    <div class="wiz-actions">
+      <button type="button" class="btn btn-lg" on:click={back}>← Kembali</button>
+      <button class="btn btn-primary btn-lg">Lanjut →</button>
+    </div>
+  </form>
+{/if}
+
+<!-- Langkah 6: Periksa & Simpan -->
+{#if step === 6}
   <div class="card">
-    <h3>Bagian Surat Kuasa</h3>
-    <div class="section-sub">Penerima kuasa dipilih dari ahli waris; ahli waris lain menjadi pemberi kuasa. Item kuasa bisa diedit nanti.</div>
+    <h2>Langkah 6: Periksa Kembali</h2>
+    <div class="section-sub">Pastikan semua data benar. Klik “Ubah” untuk kembali ke langkah terkait.</div>
 
-    <div class="field">
-      <label>Penerima Kuasa (diberi kuasa oleh ahli waris lain)</label>
-      <select bind:value={penerima_kuasa_index}>
-        <option value={null}>— Belum dipilih —</option>
-        {#each ahli_waris as a, i}
-          <option value={i}>{a.nama ? a.nama : 'Ahli Waris ' + (i + 1)}</option>
+    <div class="review-row">
+      <div class="rv-label">Data Berkas</div>
+      <div class="rv-value">Tanggal surat {fmtDate(tanggal_surat)} · Tempat tinggal: {tempat_tinggal_pewaris || '—'}</div>
+      <button type="button" class="btn btn-sm" on:click={() => goTo(1)}>Ubah</button>
+    </div>
+    <div class="review-row">
+      <div class="rv-label">Pewaris</div>
+      <div class="rv-value">
+        {#each pewaris as p, i}
+          <div>{i + 1}. {p.nama || '—'} ({p.status === 'istri' ? 'Istri' : 'Suami'}) — meninggal {fmtDate(p.tgl_meninggal)}</div>
         {/each}
-      </select>
-    </div>
-
-    <div class="divider"></div>
-
-    <div class="card-title">
-      <h3 class="mb-0" style="font-size:0.95rem;">Daftar Item Kuasa</h3>
-      <button type="button" class="btn btn-sm" on:click={addKuasa}>+ Tambah Item</button>
-    </div>
-    {#if kuasa.length === 0}<div class="muted small">Belum ada item kuasa.</div>{/if}
-    {#each kuasa as _, i}
-      <div class="flex gap items-center mt-1">
-        <textarea class="grow" rows="2" placeholder="mis. Pengurusan administrasi kartu BPJS Ketenagakerjaan Nomor … an. …" bind:value={kuasa[i]}></textarea>
-        <button type="button" class="btn btn-sm btn-danger" on:click={() => removeKuasa(i)}>Hapus</button>
       </div>
-    {/each}
+      <button type="button" class="btn btn-sm" on:click={() => goTo(2)}>Ubah</button>
+    </div>
+    <div class="review-row">
+      <div class="rv-label">Ahli Waris</div>
+      <div class="rv-value">
+        {#each ahli_waris as a, i}
+          <div>
+            {i + 1}. {a.nama || '—'}{a.keterangan ? ` (${a.keterangan})` : ''}
+            {#if penerima_kuasa_index === i}&nbsp;<span class="badge badge-blue">Penerima Kuasa</span>{/if}
+          </div>
+        {/each}
+      </div>
+      <button type="button" class="btn btn-sm" on:click={() => goTo(3)}>Ubah</button>
+    </div>
+    <div class="review-row">
+      <div class="rv-label">Saksi</div>
+      <div class="rv-value">
+        {#each saksi as s, i}<div>{i + 1}. {s.nama || '—'}{s.hubungan ? ` (${s.hubungan})` : ''}</div>{/each}
+      </div>
+      <button type="button" class="btn btn-sm" on:click={() => goTo(4)}>Ubah</button>
+    </div>
+    <div class="review-row">
+      <div class="rv-label">Surat Kuasa</div>
+      <div class="rv-value">
+        {#if penerima_kuasa_index === null}
+          <div>Penerima kuasa belum dipilih.</div>
+        {:else}
+          <div>Penerima kuasa: {namaAtau(ahli_waris[penerima_kuasa_index], penerima_kuasa_index)}</div>
+        {/if}
+        {#each kuasa.filter((k) => k.trim()) as k, i}<div>{i + 1}. {k}</div>{/each}
+      </div>
+      <button type="button" class="btn btn-sm" on:click={() => goTo(5)}>Ubah</button>
+    </div>
   </div>
 
-  <div class="flex between mt-2">
-    <a class="btn btn-ghost" href="#/">Batal</a>
-    <button class="btn btn-primary" disabled={busy}>{busy ? 'Menyimpan…' : 'Simpan Berkas & Buat Nomor'}</button>
+  <div class="notice mt-2">
+    Setelah disimpan, nomor registrasi Camat &amp; Lurah langsung terbit dan data
+    <strong>tidak bisa diubah lagi</strong> — kecuali bagian Surat Kuasa.
   </div>
-</form>
+
+  <div class="wiz-actions">
+    <button type="button" class="btn btn-lg" on:click={back}>← Kembali</button>
+    <button type="button" class="btn btn-primary btn-lg" disabled={busy} on:click={submit}>
+      {busy ? 'Menyimpan…' : 'Simpan Berkas'}
+    </button>
+  </div>
+{/if}

@@ -22,8 +22,8 @@
 <div class="login-wrap">
   <div class="card login-card">
     <div style="text-align:center; margin-bottom:1.25rem;">
-      <div class="brand" style="font-size:1.3rem;">SURAT WARIS</div>
-      <div class="muted small">Aplikasi Pembuatan Surat Keterangan Ahli Waris</div>
+      <div class="brand" style="font-size:1.4rem;">SIWARIS</div>
+      <div class="muted small">Sistem Informasi Surat Ahli Waris<br />Kecamatan Dumai Timur</div>
     </div>
 
     {#if error}<div class="alert alert-error">{error}</div>{/if}

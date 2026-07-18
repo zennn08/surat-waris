@@ -75,6 +75,7 @@
   {:else if items.length === 0}
     <div class="empty">Belum ada pejabat.</div>
   {:else}
+    <div class="table-wrap">
     <table>
       <thead><tr><th>Jabatan</th><th>Nama</th><th>NIP</th><th>Status</th><th style="width:140px;"></th></tr></thead>
       <tbody>
@@ -90,5 +91,6 @@
         {/each}
       </tbody>
     </table>
+    </div>
   {/if}
 </div>

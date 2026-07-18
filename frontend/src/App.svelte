@@ -52,7 +52,7 @@
   <div class="app-shell">
     <header class="topbar">
       <div class="topbar-inner">
-        <span class="brand">SURAT WARIS</span>
+        <span class="brand">SIWARIS</span>
         <nav class="nav">
           {#each links as l}
             <a href={'#' + l.to} class:active={isActive($path, l.to)}>{l.label}</a>
@@ -74,7 +74,7 @@
   <div class="toast {$toast.type}">{$toast.message}</div>
 {/if}
 
-<footer class="app-footer">© Kukerta UNRI Kec. Dumai Timur 2026</footer>
+<footer class="app-footer">SIWARIS · © Kukerta UNRI Kec. Dumai Timur 2026</footer>
 
 <style>
   .app-footer {
