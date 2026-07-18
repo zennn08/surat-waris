@@ -11,7 +11,11 @@
   import Pejabat from './routes/Pejabat.svelte'
   import Pengaturan from './routes/Pengaturan.svelte'
 
-  onMount(loadSession)
+  let version = ''
+  onMount(() => {
+    loadSession()
+    fetch('/api/version').then((r) => r.json()).then((v) => (version = v.version)).catch(() => {})
+  })
 
   // Resolusi route → { component, props, key }
   $: route = resolve($path)
@@ -74,7 +78,7 @@
   <div class="toast {$toast.type}">{$toast.message}</div>
 {/if}
 
-<footer class="app-footer">SIWARIS · © Kukerta UNRI Kec. Dumai Timur 2026</footer>
+<footer class="app-footer">SIWARIS{version ? ` ${version}` : ''} · © Kukerta UNRI Kec. Dumai Timur 2026</footer>
 
 <style>
   .app-footer {

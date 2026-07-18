@@ -146,7 +146,7 @@
     {{with .PenerimaKuasa}}
     <table class="data">
       <tr><td class="k">Nama</td><td class="s">:</td><td>{{.Nama}}</td></tr>
-      <tr><td class="k">Tempat / Tgl. Lahir</td><td class="s">:</td><td>{{.TempatLahir}}{{if .TglLahir}}, {{.TglLahir}}{{end}}</td></tr>
+      <tr><td class="k">Tempat / Tgl. Lahir</td><td class="s">:</td><td>{{.TempatLahir}}{{if .TglLahir}}, {{tglID .TglLahir}}{{end}}</td></tr>
       <tr><td class="k">Nomor Identitas</td><td class="s">:</td><td>{{.Nik}}</td></tr>
       <tr><td class="k">Pekerjaan</td><td class="s">:</td><td>{{.Pekerjaan}}</td></tr>
       <tr><td class="k">Alamat</td><td class="s">:</td><td>{{.Alamat}}</td></tr>

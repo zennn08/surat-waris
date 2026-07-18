@@ -4,6 +4,8 @@
 BINARY      := surat-waris
 WIN_BINARY  := siwaris.exe
 SQLC        := ./.tools/sqlc.exe
+# Versi ditanam ke binary (tampil di footer web). Override: make build-win VERSION=v1.0.1
+VERSION     ?= $(shell git describe --tags --always 2>/dev/null || echo dev)
 
 .PHONY: dev build build-win build-frontend clean tidy vet generate
 
@@ -16,7 +18,7 @@ build: dev
 
 ## build-win: deliverable Windows — tanpa jendela terminal, binary kecil, tanpa CGO
 build-win:
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-H windowsgui -s -w" -o $(WIN_BINARY) .
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-H windowsgui -s -w -X main.version=$(VERSION)" -o $(WIN_BINARY) .
 
 ## build-frontend: build Svelte -> frontend/dist (Fase C)
 build-frontend:

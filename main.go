@@ -29,6 +29,9 @@ const (
 	dbFileName  = "surat-waris.db"
 )
 
+// version diisi saat build via -ldflags "-X main.version=v1.x.x" (lihat CI/Makefile).
+var version = "dev"
+
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
@@ -120,6 +123,10 @@ func newRouter(sqldb *sql.DB, q *db.Queries, mgr *auth.Manager) http.Handler {
 
 	// Publik
 	r.Post("/api/login", authH.Login)
+	r.Get("/api/version", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"version":%q}`, version)
+	})
 	r.Get("/healthz", func(w http.ResponseWriter, req *http.Request) {
 		if err := sqldb.PingContext(req.Context()); err != nil {
 			http.Error(w, "db down", http.StatusServiceUnavailable)

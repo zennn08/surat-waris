@@ -91,7 +91,7 @@
   function jk(v) { return v === 'L' ? 'Laki-laki' : v === 'P' ? 'Perempuan' : (v || '—') }
   function statusLabel(s) { return s === 'istri' ? 'Istri' : 'Suami' }
   function saksiTTL(s) {
-    const t = [s.tempat_lahir, s.tgl_lahir].filter(Boolean).join(', ')
+    const t = [s.tempat_lahir, s.tgl_lahir ? fmtDate(s.tgl_lahir) : ''].filter(Boolean).join(', ')
     return t || '—'
   }
 
@@ -113,7 +113,7 @@
       </div>
     </div>
     <div class="flex gap">
-      <a class="btn btn-ghost" href="#/">← Daftar</a>
+      <a class="btn" href="#/">← Kembali ke Daftar</a>
       <a class="btn btn-primary" href={`/berkas/${id}/cetak`} target="_blank" rel="noopener">Cetak 3 Surat</a>
     </div>
   </div>
@@ -242,7 +242,7 @@
         <div class="section-sub mt-2">Data pelengkap penerima kuasa — tercetak pada Surat Kuasa.</div>
         <div class="row row-3">
           <div class="field mb-0"><label>Tempat Lahir</label><input bind:value={pelengkap.tempat_lahir} /></div>
-          <div class="field mb-0"><label>Tanggal Lahir</label><input bind:value={pelengkap.tgl_lahir} placeholder="mis. 08-12-1994" /></div>
+          <div class="field mb-0"><label>Tanggal Lahir</label><input type="date" bind:value={pelengkap.tgl_lahir} /></div>
           <div class="field mb-0"><label>Pekerjaan</label><input bind:value={pelengkap.pekerjaan} /></div>
         </div>
         <button class="btn btn-sm btn-primary mt-1" on:click={savePelengkap}>Simpan Data Pelengkap</button>

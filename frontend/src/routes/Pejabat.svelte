@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import { api } from '../lib/api.js'
   import { notify } from '../lib/stores.js'
+  import { digitsOnly } from '../lib/format.js'
 
   let items = []
   let loading = true
@@ -55,7 +56,7 @@
       <div class="field"><label>Nama</label><input bind:value={form.nama} required /></div>
     </div>
     <div class="row row-2">
-      <div class="field"><label>NIP</label><input bind:value={form.nip} class="mono" required /></div>
+      <div class="field"><label>NIP</label><input bind:value={form.nip} use:digitsOnly class="mono" inputmode="numeric" maxlength="18" pattern={'[0-9]{18}'} title="NIP harus 18 digit angka" required /></div>
       <div class="field"><label>&nbsp;</label>
         <label class="flex items-center gap" style="font-weight:500;color:var(--text);text-transform:none;">
           <input type="checkbox" style="width:auto;" bind:checked={form.aktif} /> Jadikan pejabat aktif

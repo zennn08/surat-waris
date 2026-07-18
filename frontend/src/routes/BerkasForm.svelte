@@ -3,7 +3,9 @@
   import { api } from '../lib/api.js'
   import { navigate } from '../lib/router.js'
   import { notify } from '../lib/stores.js'
-  import { fmtDate } from '../lib/format.js'
+  import { fmtDate, digitsOnly } from '../lib/format.js'
+
+  const AGAMA = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Khonghucu']
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -93,7 +95,7 @@
       { nama: 'SARITISA TAFONAO', nik: randNik(), status: 'istri', tgl_meninggal: '2024-02-10', instansi_kematian: '', no_surat_kematian: '1472-KM-9', tgl_surat_kematian: '2024-02-15' },
     ]
     ahli_waris = [
-      { nama: 'ANGERAGO TAFONAO', nik: randNik(), umur: 31, jenis_kelamin: 'L', agama: 'Kristen', alamat: 'Jl. Sabar Menanti', keterangan: 'Anak', tempat_lahir: 'Doli-doli', tgl_lahir: '08-12-1994', pekerjaan: 'Pelajar/Mahasiswa' },
+      { nama: 'ANGERAGO TAFONAO', nik: randNik(), umur: 31, jenis_kelamin: 'L', agama: 'Kristen', alamat: 'Jl. Sabar Menanti', keterangan: 'Anak', tempat_lahir: 'Doli-doli', tgl_lahir: '1994-12-08', pekerjaan: 'Pelajar/Mahasiswa' },
       { nama: 'ELViNA TAFONAO', nik: randNik(), umur: 27, jenis_kelamin: 'P', agama: 'Kristen', alamat: 'Jl. Sabar Menanti', keterangan: 'Anak', tempat_lahir: '', tgl_lahir: '', pekerjaan: '' },
     ]
     saksi = [
@@ -228,7 +230,7 @@
           </div>
           <div class="row row-3">
             <div class="field"><label>Nama Lengkap</label><input bind:value={p.nama} required /></div>
-            <div class="field"><label>NIK</label><input bind:value={p.nik} class="mono" required /></div>
+            <div class="field"><label>NIK</label><input bind:value={p.nik} use:digitsOnly class="mono" inputmode="numeric" maxlength="16" pattern={'[0-9]{16}'} title="NIK harus 16 digit angka" required /></div>
             <div class="field"><label>Status</label>
               <select bind:value={p.status}><option value="suami">Suami</option><option value="istri">Istri</option></select>
             </div>
@@ -243,7 +245,11 @@
           </div>
           <div class="row row-2">
             <div class="field"><label>No. Surat Kematian</label><input bind:value={p.no_surat_kematian} required /></div>
-            <div class="field"><label>Tanggal Surat Kematian</label><input type="date" bind:value={p.tgl_surat_kematian} required /></div>
+            <div class="field">
+              <label>Tanggal Surat Kematian</label>
+              <input type="date" bind:value={p.tgl_surat_kematian} min={p.tgl_meninggal || undefined} required />
+              <div class="help">Tidak boleh lebih awal dari tanggal meninggal.</div>
+            </div>
           </div>
         </div>
       {/each}
@@ -272,14 +278,19 @@
           </div>
           <div class="row row-2">
             <div class="field"><label>Nama Lengkap</label><input bind:value={a.nama} required /></div>
-            <div class="field"><label>NIK</label><input bind:value={a.nik} class="mono" required /></div>
+            <div class="field"><label>NIK</label><input bind:value={a.nik} use:digitsOnly class="mono" inputmode="numeric" maxlength="16" pattern={'[0-9]{16}'} title="NIK harus 16 digit angka" required /></div>
           </div>
           <div class="row row-3">
             <div class="field"><label>Umur</label><input type="number" min="0" bind:value={a.umur} /></div>
             <div class="field"><label>Jenis Kelamin</label>
               <select bind:value={a.jenis_kelamin}><option value="L">Laki-laki</option><option value="P">Perempuan</option></select>
             </div>
-            <div class="field"><label>Agama</label><input bind:value={a.agama} /></div>
+            <div class="field"><label>Agama</label>
+              <select bind:value={a.agama}>
+                <option value="">— Pilih —</option>
+                {#each AGAMA as ag}<option value={ag}>{ag}</option>{/each}
+              </select>
+            </div>
           </div>
           <div class="row row-2">
             <div class="field"><label>Alamat</label><input bind:value={a.alamat} /></div>
@@ -308,10 +319,10 @@
           <div class="row row-3">
             <div class="field"><label>Nama Lengkap</label><input bind:value={s.nama} required /></div>
             <div class="field"><label>Tempat Lahir</label><input bind:value={s.tempat_lahir} /></div>
-            <div class="field"><label>Tanggal Lahir</label><input bind:value={s.tgl_lahir} placeholder="contoh: 1970-05-12" /></div>
+            <div class="field"><label>Tanggal Lahir</label><input type="date" bind:value={s.tgl_lahir} /></div>
           </div>
           <div class="row row-3">
-            <div class="field"><label>NIK</label><input bind:value={s.nik} class="mono" /></div>
+            <div class="field"><label>NIK</label><input bind:value={s.nik} use:digitsOnly class="mono" inputmode="numeric" maxlength="16" pattern={'[0-9]{16}'} title="NIK harus 16 digit angka (boleh dikosongkan)" /></div>
             <div class="field"><label>Alamat</label><input bind:value={s.alamat} /></div>
             <div class="field"><label>Hubungan dengan Almarhum/ah</label><input bind:value={s.hubungan} placeholder="contoh: Tetangga" /></div>
           </div>
@@ -349,7 +360,7 @@
         <div class="section-sub">Data pelengkap penerima kuasa — tercetak pada Surat Kuasa.</div>
         <div class="row row-3">
           <div class="field"><label>Tempat Lahir</label><input bind:value={ahli_waris[penerima_kuasa_index].tempat_lahir} /></div>
-          <div class="field"><label>Tanggal Lahir</label><input bind:value={ahli_waris[penerima_kuasa_index].tgl_lahir} placeholder="contoh: 08-12-1994" /></div>
+          <div class="field"><label>Tanggal Lahir</label><input type="date" bind:value={ahli_waris[penerima_kuasa_index].tgl_lahir} /></div>
           <div class="field"><label>Pekerjaan</label><input bind:value={ahli_waris[penerima_kuasa_index].pekerjaan} /></div>
         </div>
       {/if}

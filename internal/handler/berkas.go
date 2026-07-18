@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -160,6 +161,8 @@ type createBerkasReq struct {
 	Kuasa                []string         `json:"kuasa"`
 }
 
+var nik16Re = regexp.MustCompile(`^\d{16}$`)
+
 func (r *createBerkasReq) validate() (time.Time, error) {
 	tgl, err := time.Parse("2006-01-02", strings.TrimSpace(r.TanggalSurat))
 	if err != nil {
@@ -175,12 +178,21 @@ func (r *createBerkasReq) validate() (time.Time, error) {
 		if strings.TrimSpace(p.Nama) == "" || strings.TrimSpace(p.Nik) == "" {
 			return time.Time{}, fmt.Errorf("pewaris #%d: nama dan NIK wajib diisi", i+1)
 		}
+		if !nik16Re.MatchString(strings.TrimSpace(p.Nik)) {
+			return time.Time{}, fmt.Errorf("pewaris #%d: NIK harus 16 digit angka", i+1)
+		}
 		st := strings.ToLower(strings.TrimSpace(p.Status))
 		if st != "suami" && st != "istri" {
 			return time.Time{}, fmt.Errorf("pewaris #%d: status harus 'suami' atau 'istri'", i+1)
 		}
 		if strings.TrimSpace(p.TglMeninggal) == "" || strings.TrimSpace(p.NoSuratKematian) == "" || strings.TrimSpace(p.TglSuratKematian) == "" {
 			return time.Time{}, fmt.Errorf("pewaris #%d: tanggal meninggal, no & tgl surat kematian wajib diisi", i+1)
+		}
+		// Surat kematian tidak mungkin terbit sebelum orangnya meninggal.
+		tm, errM := time.Parse("2006-01-02", strings.TrimSpace(p.TglMeninggal))
+		ts, errS := time.Parse("2006-01-02", strings.TrimSpace(p.TglSuratKematian))
+		if errM == nil && errS == nil && ts.Before(tm) {
+			return time.Time{}, fmt.Errorf("pewaris #%d: tanggal surat kematian tidak boleh lebih awal dari tanggal meninggal", i+1)
 		}
 	}
 	if len(r.AhliWaris) < 1 {
@@ -190,6 +202,9 @@ func (r *createBerkasReq) validate() (time.Time, error) {
 		if strings.TrimSpace(a.Nama) == "" || strings.TrimSpace(a.Nik) == "" {
 			return time.Time{}, fmt.Errorf("ahli waris #%d: nama dan NIK wajib diisi", i+1)
 		}
+		if !nik16Re.MatchString(strings.TrimSpace(a.Nik)) {
+			return time.Time{}, fmt.Errorf("ahli waris #%d: NIK harus 16 digit angka", i+1)
+		}
 	}
 	if len(r.Saksi) != 2 {
 		return time.Time{}, errors.New("saksi harus tepat 2 orang")
@@ -197,6 +212,9 @@ func (r *createBerkasReq) validate() (time.Time, error) {
 	for i, s := range r.Saksi {
 		if strings.TrimSpace(s.Nama) == "" {
 			return time.Time{}, fmt.Errorf("saksi #%d: nama wajib diisi", i+1)
+		}
+		if nik := strings.TrimSpace(s.Nik); nik != "" && !nik16Re.MatchString(nik) {
+			return time.Time{}, fmt.Errorf("saksi #%d: NIK harus 16 digit angka (atau kosongkan)", i+1)
 		}
 	}
 	if r.PenerimaKuasaIndex != nil {

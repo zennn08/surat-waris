@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -55,8 +56,13 @@ func (in *pejabatInput) validate() error {
 	if in.Nip == "" {
 		return errors.New("NIP wajib diisi")
 	}
+	if !nip18Re.MatchString(in.Nip) {
+		return errors.New("NIP harus 18 digit angka")
+	}
 	return nil
 }
+
+var nip18Re = regexp.MustCompile(`^\d{18}$`)
 
 func boolToInt(b bool) int64 {
 	if b {
