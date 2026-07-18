@@ -207,9 +207,47 @@ func (r *createBerkasReq) validate() (time.Time, error) {
 	return tgl, nil
 }
 
+// prasyaratBerkas memastikan pejabat aktif (Camat & Lurah) dan pengaturan sudah
+// terisi sebelum berkas boleh dibuat. Balikan pesan kosong bila lolos.
+func (h *Handler) prasyaratBerkas(ctx context.Context) string {
+	if _, err := h.q.GetPejabatAktif(ctx, "camat"); errors.Is(err, sql.ErrNoRows) {
+		return "Pejabat Camat aktif belum diisi. Lengkapi dulu di halaman Pejabat."
+	}
+	if _, err := h.q.GetPejabatAktif(ctx, "lurah"); errors.Is(err, sql.ErrNoRows) {
+		return "Pejabat Lurah aktif belum diisi. Lengkapi dulu di halaman Pejabat."
+	}
+	peng, err := h.q.GetPengaturan(ctx)
+	if err != nil {
+		return "Pengaturan belum diisi. Lengkapi dulu di halaman Pengaturan."
+	}
+	wajib := []struct{ label, val string }{
+		{"Nama Kelurahan", strOrEmpty(peng.NamaKelurahan)},
+		{"Kecamatan", strOrEmpty(peng.Kecamatan)},
+		{"Kota", strOrEmpty(peng.Kota)},
+		{"Kode Kecamatan", strOrEmpty(peng.KodeKecamatan)},
+		{"Kode Kelurahan", strOrEmpty(peng.KodeKelurahan)},
+		{"Instansi Penerbit Surat Kematian", strOrEmpty(peng.InstansiKematian)},
+	}
+	var kosong []string
+	for _, f := range wajib {
+		if strings.TrimSpace(f.val) == "" {
+			kosong = append(kosong, f.label)
+		}
+	}
+	if len(kosong) > 0 {
+		return "Pengaturan belum lengkap (" + strings.Join(kosong, ", ") + "). Lengkapi dulu di halaman Pengaturan."
+	}
+	return ""
+}
+
 // CreateBerkas: POST /api/berkas
 func (h *Handler) CreateBerkas(w http.ResponseWriter, r *http.Request) {
 	uid, _ := auth.UserIDFromContext(r.Context())
+
+	if msg := h.prasyaratBerkas(r.Context()); msg != "" {
+		writeErr(w, http.StatusUnprocessableEntity, msg)
+		return
+	}
 
 	var req createBerkasReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

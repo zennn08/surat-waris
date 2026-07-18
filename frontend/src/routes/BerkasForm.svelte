@@ -1,10 +1,37 @@
 <script>
+  import { onMount } from 'svelte'
   import { api } from '../lib/api.js'
   import { navigate } from '../lib/router.js'
   import { notify } from '../lib/stores.js'
   import { fmtDate } from '../lib/format.js'
 
   const today = new Date().toISOString().slice(0, 10)
+
+  // Prasyarat: pejabat aktif (Camat & Lurah) + pengaturan lengkap.
+  let ready = false
+  let syarat = [] // {label, ok, href, aksi}
+  let peng = null
+
+  onMount(async () => {
+    try {
+      const [pejabat, pengaturan] = await Promise.all([api.get('/api/pejabat'), api.get('/api/pengaturan')])
+      peng = pengaturan
+      const camatOk = pejabat.some((p) => p.jabatan === 'camat' && p.aktif)
+      const lurahOk = pejabat.some((p) => p.jabatan === 'lurah' && p.aktif)
+      const pengOk = ['nama_kelurahan', 'kecamatan', 'kota', 'kode_kecamatan', 'kode_kelurahan', 'instansi_kematian']
+        .every((k) => (pengaturan[k] || '').trim() !== '')
+      syarat = [
+        { label: 'Pejabat Camat (aktif) sudah diisi', ok: camatOk, href: '#/pejabat', aksi: 'Buka Halaman Pejabat' },
+        { label: 'Pejabat Lurah (aktif) sudah diisi', ok: lurahOk, href: '#/pejabat', aksi: 'Buka Halaman Pejabat' },
+        { label: 'Pengaturan wilayah sudah lengkap', ok: pengOk, href: '#/pengaturan', aksi: 'Buka Halaman Pengaturan' },
+      ]
+    } catch (e) {
+      error = e.message
+    } finally {
+      ready = true
+    }
+  })
+  $: siap = syarat.length > 0 && syarat.every((s) => s.ok)
 
   let tanggal_surat = today
   let tempat_tinggal_pewaris = ''
@@ -112,10 +139,32 @@
 <div class="card-title">
   <h1 class="mb-0">Buat Berkas Waris</h1>
   <div class="flex gap">
-    <button type="button" class="btn btn-sm" on:click={fillSample}>Isi Data Contoh</button>
+    {#if siap}<button type="button" class="btn btn-sm" on:click={fillSample}>Isi Data Contoh</button>{/if}
     <a class="btn btn-ghost" href="#/">Batal</a>
   </div>
 </div>
+
+{#if !ready}
+  <div class="spinner">Memuat…</div>
+{:else if !siap}
+  {#if error}<div class="alert alert-error">{error}</div>{/if}
+  <div class="card">
+    <h2>Lengkapi Dulu Sebelum Membuat Berkas</h2>
+    <div class="section-sub">
+      Data berikut dipakai pada isi surat dan nomor registrasi, jadi wajib diisi
+      sekali di awal. Setelah lengkap, buka kembali halaman ini.
+    </div>
+    {#each syarat as s}
+      <div class="review-row">
+        <div class="rv-value">
+          {#if s.ok}<span class="badge badge-green">✓ Sudah</span>{:else}<span class="badge badge-gray">Belum</span>{/if}
+          &nbsp;{s.label}
+        </div>
+        {#if !s.ok}<a class="btn btn-primary" href={s.href}>{s.aksi}</a>{/if}
+      </div>
+    {/each}
+  </div>
+{:else}
 <p class="page-sub">
   Ikuti langkah satu per satu. Isian Anda tidak hilang saat berpindah langkah,
   dan semuanya bisa diperiksa lagi di langkah terakhir sebelum disimpan.
@@ -189,7 +238,7 @@
             <div class="field">
               <label>Instansi Penerbit Surat Kematian</label>
               <input bind:value={p.instansi_kematian} placeholder="boleh dikosongkan" />
-              <div class="help">Bila kosong, dipakai instansi dari halaman Pengaturan.</div>
+              <div class="help">Bila kosong, otomatis diisi: {peng?.instansi_kematian || 'instansi dari halaman Pengaturan'}.</div>
             </div>
           </div>
           <div class="row row-2">
@@ -393,4 +442,5 @@
       {busy ? 'Menyimpan…' : 'Simpan Berkas'}
     </button>
   </div>
+{/if}
 {/if}

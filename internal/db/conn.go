@@ -16,6 +16,12 @@ var schemaSQL string
 // upgrade exe idempotent dan tidak menyentuh data yang sudah ada.
 var migrations = []string{
 	schemaSQL, // v1: skema penuh (model v2 spek)
+	// v2: default instansi penerbit surat kematian terisi sejak awal;
+	// DB lama ikut terisi hanya bila kolomnya masih kosong.
+	`INSERT INTO pengaturan (id, instansi_kematian)
+	 VALUES (1, 'Dinas Kependudukan dan Pencatatan Sipil Kota Dumai')
+	 ON CONFLICT(id) DO UPDATE SET instansi_kematian = excluded.instansi_kematian
+	 WHERE instansi_kematian IS NULL OR instansi_kematian = '';`,
 }
 
 // Open membuka/membuat SQLite di path yang diberikan dengan WAL + foreign keys.
