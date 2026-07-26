@@ -66,7 +66,7 @@
       <table>
         <thead>
           <tr>
-            <th style="width:210px;">Reg. No. Camat</th>
+            <th style="width:210px;">Reg. No. Kelurahan</th>
             <th>Pewaris (Alm.)</th>
             <th style="width:140px;">Tanggal Surat</th>
             <th style="width:90px;">Status</th>
@@ -76,7 +76,7 @@
         <tbody>
           {#each items as b}
             <tr>
-              <td class="mono">{b.reg_no_camat}</td>
+              <td class="mono">{b.reg_no_lurah}</td>
               <td>{pewarisNames(b)}</td>
               <td>{fmtDate(b.tanggal_surat)}</td>
               <td><span class="badge badge-green">{b.status === 'terbit' ? 'Terbit' : b.status}</span></td>

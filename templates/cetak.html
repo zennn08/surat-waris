@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<title>Cetak Surat — {{.B.RegNoCamat}}</title>
+<title>Cetak Surat — {{.B.RegNoLurah}}</title>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -68,6 +68,14 @@
   .pejabat2 .jab, .pejabat1 .jab { margin-top: 2pt; }
   .pejabat2 .col.tengah { text-align: left; }
 
+  /* footer sistem: baris kecil di akhir tiap surat.
+     ponytail: sengaja in-flow, bukan position:fixed — fixed di print Chromium
+     terbukti nyangkut di atas halaman & hilang di halaman 1. */
+  .sysfooter {
+    margin-top: 6pt; text-align: center;
+    font-family: 'Segoe UI', Arial, sans-serif; font-size: 6pt; line-height: 1; color: #777;
+  }
+
   @media screen {
     body { padding: 60px 0 40px; }
     .surat { width: 21cm; min-height: 29.7cm; padding: 2.5cm; margin: 0 auto 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,.25); }
@@ -131,6 +139,7 @@
   </div>
 
   {{template "pejabatDua" .}}
+  {{template "sysfooter" .}}
 </section>
 
 {{/* ============ SURAT 2: KUASA AHLI WARIS ============ */}}
@@ -198,6 +207,7 @@
   </div>
 
   {{template "pejabatDua" .}}
+  {{template "sysfooter" .}}
 </section>
 
 {{/* ============ SURAT 3: PERNYATAAN AHLI WARIS ============ */}}
@@ -235,6 +245,7 @@
   </div>
 
   {{template "pejabatLurah" .}}
+  {{template "sysfooter" .}}
 </section>
 </body>
 </html>
@@ -318,7 +329,7 @@
   <div class="col">
     <div>Mengetahui :</div>
     <div>Reg. No. : {{.B.RegNoLurah}}</div>
-    <div>Tanggal&nbsp;&nbsp;: {{orDash .B.TanggalRegLurah}}</div>
+    <div>Tanggal&nbsp;&nbsp;: {{orDash (tglID .B.TanggalRegLurah)}}</div>
     <div class="jab" style="text-align:center;">L U R A H,</div>
     <div class="sp-lg"></div>
     {{if .Lurah}}
@@ -330,6 +341,10 @@
     {{end}}
   </div>
 </div>
+{{end}}
+
+{{define "sysfooter"}}
+<div class="sysfooter">Dokumen ini dicetak melalui aplikasi SIWARIS (Sistem Informasi Surat Ahli Waris) — Reg. No. {{.B.RegNoLurah}} · dicetak pada {{.TanggalCetak}}</div>
 {{end}}
 
 {{define "pejabatLurah"}}

@@ -7,6 +7,8 @@
 
   const AGAMA = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Khonghucu']
 
+  export let id = null // terisi → mode edit (revisi berkas yang sudah ada)
+
   const today = new Date().toISOString().slice(0, 10)
 
   // Prasyarat: pejabat aktif (Camat & Lurah) + pengaturan lengkap.
@@ -27,12 +29,36 @@
         { label: 'Pejabat Lurah (aktif) sudah diisi', ok: lurahOk, href: '#/pejabat', aksi: 'Buka Halaman Pejabat' },
         { label: 'Pengaturan wilayah sudah lengkap', ok: pengOk, href: '#/pengaturan', aksi: 'Buka Halaman Pengaturan' },
       ]
+      if (id) prefill(await api.get('/api/berkas/' + id))
     } catch (e) {
       error = e.message
     } finally {
       ready = true
     }
   })
+
+  // Mode edit: isi form dari berkas yang sudah tersimpan.
+  function prefill(b) {
+    tanggal_surat = b.tanggal_surat
+    tempat_tinggal_pewaris = b.tempat_tinggal_pewaris
+    pewaris = b.pewaris.map((p) => ({
+      nama: p.nama, nik: p.nik, status: p.status, tgl_meninggal: p.tgl_meninggal,
+      instansi_kematian: p.instansi_kematian || '', no_surat_kematian: p.no_surat_kematian, tgl_surat_kematian: p.tgl_surat_kematian,
+    }))
+    ahli_waris = b.ahli_waris.map((a) => ({
+      nama: a.nama, nik: a.nik, umur: a.umur ?? '', jenis_kelamin: a.jenis_kelamin || 'L',
+      agama: a.agama || '', alamat: a.alamat || '', keterangan: a.keterangan || '',
+      tempat_lahir: a.tempat_lahir || '', tgl_lahir: a.tgl_lahir || '', pekerjaan: a.pekerjaan || '',
+    }))
+    saksi = b.saksi.map((s) => ({
+      nama: s.nama, tempat_lahir: s.tempat_lahir || '', tgl_lahir: s.tgl_lahir || '',
+      alamat: s.alamat || '', nik: s.nik || '', hubungan: s.hubungan || '',
+    }))
+    while (saksi.length < 2) saksi.push(emptySaksi())
+    kuasa = b.kuasa.length ? b.kuasa.map((k) => k.deskripsi) : ['']
+    const pkIdx = b.ahli_waris.findIndex((a) => a.id === b.penerima_kuasa_ahli_waris_id)
+    penerima_kuasa_index = pkIdx >= 0 ? pkIdx : null
+  }
   $: siap = syarat.length > 0 && syarat.every((s) => s.ok)
 
   let tanggal_surat = today
@@ -124,9 +150,11 @@
         penerima_kuasa_index: penerima_kuasa_index === null ? null : Number(penerima_kuasa_index),
         kuasa: kuasa.map((k) => k.trim()).filter(Boolean),
       }
-      const created = await api.post('/api/berkas', payload)
-      notify('Berkas berhasil dibuat: ' + created.reg_no_camat, 'success')
-      navigate('/berkas/' + created.id)
+      const saved = id
+        ? await api.put('/api/berkas/' + id, payload)
+        : await api.post('/api/berkas', payload)
+      notify(id ? 'Revisi berkas tersimpan' : 'Berkas berhasil dibuat: ' + saved.reg_no_lurah, 'success')
+      navigate('/berkas/' + saved.id)
     } catch (e) {
       error = e.message
       window.scrollTo(0, 0)
@@ -139,10 +167,10 @@
 </script>
 
 <div class="card-title">
-  <h1 class="mb-0">Buat Berkas Waris</h1>
+  <h1 class="mb-0">{id ? 'Ubah Berkas Waris' : 'Buat Berkas Waris'}</h1>
   <div class="flex gap">
-    {#if siap}<button type="button" class="btn btn-sm" on:click={fillSample}>Isi Data Contoh</button>{/if}
-    <a class="btn btn-ghost" href="#/">Batal</a>
+    {#if siap && !id}<button type="button" class="btn btn-sm" on:click={fillSample}>Isi Data Contoh</button>{/if}
+    <a class="btn btn-ghost" href={id ? '#/berkas/' + id : '#/'}>Batal</a>
   </div>
 </div>
 
@@ -343,7 +371,6 @@
       <h2>Langkah 5: Surat Kuasa</h2>
       <div class="section-sub">
         Satu ahli waris ditunjuk sebagai penerima kuasa; ahli waris lainnya otomatis menjadi pemberi kuasa.
-        Bagian ini masih bisa diubah setelah berkas disimpan.
       </div>
 
       <div class="field" style="max-width:460px;">
@@ -443,14 +470,20 @@
   </div>
 
   <div class="notice mt-2">
-    Setelah disimpan, nomor registrasi Camat &amp; Lurah langsung terbit dan data
-    <strong>tidak bisa diubah lagi</strong> — kecuali bagian Surat Kuasa.
+    {#if id}
+      Menyimpan revisi akan <strong>mengganti seluruh data berkas ini</strong>.
+      Nomor register tidak berubah.
+    {:else}
+      Setelah disimpan, nomor register Kelurahan langsung terbit. Tidak perlu
+      khawatir salah — <strong>semua data masih bisa diubah</strong> lewat tombol
+      “Ubah Berkas” di halaman detail.
+    {/if}
   </div>
 
   <div class="wiz-actions">
     <button type="button" class="btn btn-lg" on:click={back}>← Kembali</button>
     <button type="button" class="btn btn-primary btn-lg" disabled={busy} on:click={submit}>
-      {busy ? 'Menyimpan…' : 'Simpan Berkas'}
+      {busy ? 'Menyimpan…' : id ? 'Simpan Revisi' : 'Simpan Berkas'}
     </button>
   </div>
 {/if}

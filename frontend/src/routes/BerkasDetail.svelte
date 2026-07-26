@@ -114,12 +114,13 @@
     </div>
     <div class="flex gap">
       <a class="btn" href="#/">← Kembali ke Daftar</a>
+      <a class="btn" href={`#/berkas/${id}/edit`}>✎ Ubah Berkas</a>
       <a class="btn btn-primary" href={`/berkas/${id}/cetak`} target="_blank" rel="noopener">Cetak 3 Surat</a>
     </div>
   </div>
   <p class="page-sub">
-    Data dasar berkas sudah terkunci karena nomor telah terbit.
-    Hanya bagian <strong>Surat Kuasa</strong> di bawah yang masih bisa diubah.
+    Semua data berkas masih dapat direvisi lewat tombol <strong>“✎ Ubah Berkas”</strong>;
+    nomor register tidak berubah. Khusus bagian Surat Kuasa juga bisa diubah cepat di bawah.
   </p>
 
   <!-- Surat yang dihasilkan -->
@@ -143,10 +144,7 @@
 
   <!-- Info berkas -->
   <div class="card">
-    <div class="card-title mb-0" style="margin-bottom:1rem;">
-      <h3 class="mb-0">Informasi Berkas</h3>
-      <span class="badge badge-gray" title="Data ini tidak dapat diubah lagi">🔒 Terkunci</span>
-    </div>
+    <h3>Informasi Berkas</h3>
     <div class="row row-3">
       <div><div class="muted small">Reg. No. Camat</div><div class="mono">{berkas.reg_no_camat}</div></div>
       <div><div class="muted small">Reg. No. Lurah</div><div class="mono">{berkas.reg_no_lurah}</div></div>
@@ -160,10 +158,7 @@
 
   <!-- Pewaris -->
   <div class="card">
-    <div class="card-title mb-0" style="margin-bottom:1rem;">
-      <h3 class="mb-0">Pewaris (Almarhum/ah)</h3>
-      <span class="badge badge-gray" title="Data ini tidak dapat diubah lagi">🔒 Terkunci</span>
-    </div>
+    <h3>Pewaris (Almarhum/ah)</h3>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Nama</th><th>Status</th><th>NIK</th><th>Tgl Meninggal</th><th>Instansi Kematian</th><th>No. Surat</th><th>Tgl Surat</th></tr></thead>
@@ -178,10 +173,7 @@
 
   <!-- Ahli Waris -->
   <div class="card">
-    <div class="card-title mb-0" style="margin-bottom:1rem;">
-      <h3 class="mb-0">Ahli Waris</h3>
-      <span class="badge badge-gray" title="Data ini tidak dapat diubah lagi">🔒 Terkunci</span>
-    </div>
+    <h3>Ahli Waris</h3>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Nama</th><th>NIK</th><th>Umur</th><th>JK</th><th>Agama</th><th>Alamat</th><th>Hubungan</th></tr></thead>
@@ -200,10 +192,7 @@
 
   <!-- Saksi -->
   <div class="card">
-    <div class="card-title mb-0" style="margin-bottom:1rem;">
-      <h3 class="mb-0">Saksi</h3>
-      <span class="badge badge-gray" title="Data ini tidak dapat diubah lagi">🔒 Terkunci</span>
-    </div>
+    <h3>Saksi</h3>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Nama</th><th>Tempat/Tgl Lahir</th><th>NIK</th><th>Alamat</th><th>Hubungan</th></tr></thead>

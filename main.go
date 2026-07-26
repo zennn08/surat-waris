@@ -162,6 +162,7 @@ func newRouter(sqldb *sql.DB, q *db.Queries, mgr *auth.Manager) http.Handler {
 		pr.Get("/api/berkas", apiH.ListBerkas)
 		pr.Post("/api/berkas", apiH.CreateBerkas)
 		pr.Get("/api/berkas/{id}", apiH.GetBerkas)
+		pr.Put("/api/berkas/{id}", apiH.UpdateBerkas)
 
 		// Edit terbatas (SPEC §7.2): penerima kuasa + item kuasa + pelengkap penerima kuasa
 		pr.Put("/api/berkas/{id}/penerima-kuasa", apiH.SetPenerimaKuasa)

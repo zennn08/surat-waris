@@ -300,12 +300,12 @@ func (h *Handler) CreateBerkas(w http.ResponseWriter, r *http.Request) {
 // lockError menandai NIK pewaris yang sudah pernah dibuatkan surat.
 type lockError struct {
 	nik      string
-	regCamat string
+	regLurah string
 }
 
 func (e lockError) Error() string {
-	if e.regCamat != "" {
-		return fmt.Sprintf("Pewaris dengan NIK %s sudah pernah dibuatkan Surat Keterangan Ahli Waris (Reg. No. %s).", e.nik, e.regCamat)
+	if e.regLurah != "" {
+		return fmt.Sprintf("Pewaris dengan NIK %s sudah pernah dibuatkan Surat Keterangan Ahli Waris (Reg. No. %s).", e.nik, e.regLurah)
 	}
 	return fmt.Sprintf("Pewaris dengan NIK %s sudah pernah dibuatkan Surat Keterangan Ahli Waris.", e.nik)
 }
@@ -326,7 +326,7 @@ func (h *Handler) createBerkasTx(ctx context.Context, req createBerkasReq, tgl t
 			return 0, err
 		}
 		if n > 0 {
-			return 0, lockError{nik: nik, regCamat: h.lookupRegByPewarisNik(ctx, qtx, nik)}
+			return 0, lockError{nik: nik, regLurah: h.lookupRegByPewarisNik(ctx, qtx, nik)}
 		}
 	}
 
@@ -349,7 +349,9 @@ func (h *Handler) createBerkasTx(ctx context.Context, req createBerkasReq, tgl t
 	}
 	kodeKec := strOrEmpty(peng.KodeKecamatan)
 	kodeKel := strOrEmpty(peng.KodeKelurahan)
-	regCamat := surat.RegNoCamat(int(urutan), int(tahun), kodeKec)
+	// Nomor camat sengaja tanpa urutan (diisi tulis tangan oleh kecamatan);
+	// tanggal reg lurah otomatis = tanggal surat.
+	regCamat := surat.RegNoCamat(int(tahun), kodeKec)
 	regLurah := surat.RegNoLurah(int(urutan), int(tahun), kodeKel, kodeKec)
 
 	// 3. Buat berkas.
@@ -358,6 +360,7 @@ func (h *Handler) createBerkasTx(ctx context.Context, req createBerkasReq, tgl t
 		Urutan:               urutan,
 		RegNoCamat:           regCamat,
 		RegNoLurah:           regLurah,
+		TanggalRegLurah:      nullStr(tgl.Format("2006-01-02")),
 		TanggalSurat:         tgl.Format("2006-01-02"),
 		TempatTinggalPewaris: strings.TrimSpace(req.TempatTinggalPewaris),
 		CreatedBy:            sql.NullInt64{Int64: uid, Valid: uid != 0},
@@ -366,16 +369,28 @@ func (h *Handler) createBerkasTx(ctx context.Context, req createBerkasReq, tgl t
 		return 0, err
 	}
 
-	// 4. Pewaris (UNIQUE nik = pengaman lock tingkat DB). instansi_kematian
+	if err := insertAnakBerkas(ctx, qtx, b.ID, req, strOrEmpty(peng.InstansiKematian)); err != nil {
+		return 0, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+	return b.ID, nil
+}
+
+// insertAnakBerkas menulis semua anak berkas (pewaris, ahli waris, saksi,
+// kuasa, penerima kuasa) — dipakai bersama oleh create & update (full replace).
+func insertAnakBerkas(ctx context.Context, qtx *db.Queries, berkasID int64, req createBerkasReq, defaultInstansi string) error {
+	// Pewaris (UNIQUE nik = pengaman lock tingkat DB). instansi_kematian
 	// default dari pengaturan bila kosong.
-	defaultInstansi := strOrEmpty(peng.InstansiKematian)
 	for i, p := range req.Pewaris {
 		instansi := strings.TrimSpace(p.InstansiKematian)
 		if instansi == "" {
 			instansi = defaultInstansi
 		}
 		if _, err := qtx.CreatePewaris(ctx, db.CreatePewarisParams{
-			BerkasID:         b.ID,
+			BerkasID:         berkasID,
 			Urutan:           int64(i + 1),
 			Nama:             strings.TrimSpace(p.Nama),
 			Nik:              strings.TrimSpace(p.Nik),
@@ -385,15 +400,15 @@ func (h *Handler) createBerkasTx(ctx context.Context, req createBerkasReq, tgl t
 			NoSuratKematian:  strings.TrimSpace(p.NoSuratKematian),
 			TglSuratKematian: strings.TrimSpace(p.TglSuratKematian),
 		}); err != nil {
-			return 0, err
+			return err
 		}
 	}
 
-	// 5. Ahli waris — simpan ID untuk resolusi penerima kuasa.
+	// Ahli waris — simpan ID untuk resolusi penerima kuasa.
 	ahliIDs := make([]int64, 0, len(req.AhliWaris))
 	for i, a := range req.AhliWaris {
 		created, err := qtx.CreateAhliWaris(ctx, db.CreateAhliWarisParams{
-			BerkasID:     b.ID,
+			BerkasID:     berkasID,
 			Urutan:       int64(i + 1),
 			Nama:         strings.TrimSpace(a.Nama),
 			Nik:          strings.TrimSpace(a.Nik),
@@ -407,15 +422,15 @@ func (h *Handler) createBerkasTx(ctx context.Context, req createBerkasReq, tgl t
 			Pekerjaan:    nullStr(strings.TrimSpace(a.Pekerjaan)),
 		})
 		if err != nil {
-			return 0, err
+			return err
 		}
 		ahliIDs = append(ahliIDs, created.ID)
 	}
 
-	// 6. Saksi.
+	// Saksi.
 	for i, s := range req.Saksi {
 		if err := qtx.CreateSaksi(ctx, db.CreateSaksiParams{
-			BerkasID:    b.ID,
+			BerkasID:    berkasID,
 			Urutan:      int64(i + 1),
 			Nama:        strings.TrimSpace(s.Nama),
 			TempatLahir: nullStr(strings.TrimSpace(s.TempatLahir)),
@@ -424,11 +439,11 @@ func (h *Handler) createBerkasTx(ctx context.Context, req createBerkasReq, tgl t
 			Nik:         nullStr(strings.TrimSpace(s.Nik)),
 			Hubungan:    nullStr(strings.TrimSpace(s.Hubungan)),
 		}); err != nil {
-			return 0, err
+			return err
 		}
 	}
 
-	// 7. Item kuasa.
+	// Item kuasa.
 	urut := 0
 	for _, d := range req.Kuasa {
 		d = strings.TrimSpace(d)
@@ -436,35 +451,129 @@ func (h *Handler) createBerkasTx(ctx context.Context, req createBerkasReq, tgl t
 			continue
 		}
 		urut++
-		if _, err := qtx.CreateKuasaItem(ctx, db.CreateKuasaItemParams{BerkasID: b.ID, Urutan: int64(urut), Deskripsi: d}); err != nil {
-			return 0, err
+		if _, err := qtx.CreateKuasaItem(ctx, db.CreateKuasaItemParams{BerkasID: berkasID, Urutan: int64(urut), Deskripsi: d}); err != nil {
+			return err
 		}
 	}
 
-	// 8. Penerima kuasa (opsional).
+	// Penerima kuasa (opsional).
 	if req.PenerimaKuasaIndex != nil {
 		if err := qtx.SetBerkasPenerimaKuasa(ctx, db.SetBerkasPenerimaKuasaParams{
 			PenerimaKuasaAhliWarisID: sql.NullInt64{Int64: ahliIDs[*req.PenerimaKuasaIndex], Valid: true},
-			ID:                       b.ID,
+			ID:                       berkasID,
 		}); err != nil {
-			return 0, err
+			return err
+		}
+	}
+	return nil
+}
+
+// UpdateBerkas: PUT /api/berkas/{id} — revisi penuh: seluruh data anak
+// ditulis ulang; tahun/urutan/nomor register TIDAK berubah.
+func (h *Handler) UpdateBerkas(w http.ResponseWriter, r *http.Request) {
+	id, err := berkasIDParam(r)
+	if err != nil {
+		writeErr(w, http.StatusBadRequest, "id tidak valid")
+		return
+	}
+
+	var req createBerkasReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeErr(w, http.StatusBadRequest, "body tidak valid")
+		return
+	}
+	tgl, err := req.validate()
+	if err != nil {
+		writeErr(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if err := h.updateBerkasTx(r.Context(), id, req, tgl); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			writeErr(w, http.StatusNotFound, "berkas tidak ditemukan")
+			return
+		}
+		var lockErr lockError
+		if errors.As(err, &lockErr) {
+			writeErr(w, http.StatusConflict, lockErr.Error())
+			return
+		}
+		writeErr(w, http.StatusInternalServerError, "gagal menyimpan revisi: "+err.Error())
+		return
+	}
+
+	detail, err := h.loadDetail(r.Context(), h.q, id)
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, "revisi tersimpan tapi gagal dimuat")
+		return
+	}
+	writeJSON(w, http.StatusOK, detail)
+}
+
+func (h *Handler) updateBerkasTx(ctx context.Context, id int64, req createBerkasReq, tgl time.Time) error {
+	tx, err := h.sqldb.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	qtx := h.q.WithTx(tx)
+
+	if _, err := qtx.GetBerkas(ctx, id); err != nil {
+		return err // sql.ErrNoRows → 404
+	}
+
+	// Lock NIK tetap berlaku, tapi kecualikan berkas yang sedang direvisi.
+	for _, p := range req.Pewaris {
+		nik := strings.TrimSpace(p.Nik)
+		n, err := qtx.CountPewarisByNikLain(ctx, db.CountPewarisByNikLainParams{Nik: nik, BerkasID: id})
+		if err != nil {
+			return err
+		}
+		if n > 0 {
+			return lockError{nik: nik, regLurah: h.lookupRegByPewarisNik(ctx, qtx, nik)}
 		}
 	}
 
-	if err := tx.Commit(); err != nil {
-		return 0, err
+	peng, err := qtx.GetPengaturan(ctx)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return err
 	}
-	return b.ID, nil
+
+	// Kosongkan penerima kuasa dulu (FK ke ahli_waris), lalu tulis ulang anak.
+	if err := qtx.UpdateBerkasUtama(ctx, db.UpdateBerkasUtamaParams{
+		TanggalSurat:         tgl.Format("2006-01-02"),
+		TempatTinggalPewaris: strings.TrimSpace(req.TempatTinggalPewaris),
+		TanggalRegLurah:      nullStr(tgl.Format("2006-01-02")),
+		ID:                   id,
+	}); err != nil {
+		return err
+	}
+	if err := qtx.DeleteKuasaItemByBerkas(ctx, id); err != nil {
+		return err
+	}
+	if err := qtx.DeleteSaksiByBerkas(ctx, id); err != nil {
+		return err
+	}
+	if err := qtx.DeleteAhliWarisByBerkas(ctx, id); err != nil {
+		return err
+	}
+	if err := qtx.DeletePewarisByBerkas(ctx, id); err != nil {
+		return err
+	}
+	if err := insertAnakBerkas(ctx, qtx, id, req, strOrEmpty(peng.InstansiKematian)); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
-// lookupRegByPewarisNik mencari reg_no_camat berkas yang memuat NIK pewaris ini
+// lookupRegByPewarisNik mencari reg_no_lurah berkas yang memuat NIK pewaris ini
 // (best effort untuk pesan lock; abaikan error).
 func (h *Handler) lookupRegByPewarisNik(ctx context.Context, q *db.Queries, nik string) string {
 	rows, err := q.SearchBerkas(ctx, nullStr(nik))
 	if err != nil || len(rows) == 0 {
 		return ""
 	}
-	return rows[0].RegNoCamat
+	return rows[0].RegNoLurah
 }
 
 // ListBerkas: GET /api/berkas?q=...

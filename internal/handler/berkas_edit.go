@@ -13,14 +13,9 @@ import (
 	"surat-waris/internal/db"
 )
 
-// Catatan enforcement editability (SPEC §7.2):
-// Setelah berkas dibuat, HANYA yang berikut boleh diubah:
-//   - penerima_kuasa (berkas_waris.penerima_kuasa_ahli_waris_id)
-//   - item kuasa (tambah/edit/hapus)
-//   - field pelengkap penerima kuasa (tempat_lahir, tgl_lahir, pekerjaan)
-// Ditegakkan struktural: TIDAK ADA endpoint untuk mengubah pewaris / ahli waris
-// lain / saksi / tempat tinggal / nomor. Handler di bawah adalah satu-satunya
-// jalur edit yang tersedia.
+// Revisi penuh berkas tersedia via PUT /api/berkas/{id} (lihat berkas.go).
+// Handler di bawah adalah jalur edit cepat bagian Surat Kuasa dari halaman
+// detail: penerima kuasa, field pelengkapnya, dan item kuasa.
 
 func berkasIDParam(r *http.Request) (int64, error) {
 	return strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)

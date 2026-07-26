@@ -108,8 +108,8 @@ ON CONFLICT(tahun) DO UPDATE SET urutan_awal = excluded.urutan_awal;
 DELETE FROM nomor_awal WHERE tahun = ?;
 
 -- name: CreateBerkas :one
-INSERT INTO berkas_waris (tahun, urutan, reg_no_camat, reg_no_lurah, tanggal_surat, tempat_tinggal_pewaris, created_by)
-VALUES (?, ?, ?, ?, ?, ?, ?)
+INSERT INTO berkas_waris (tahun, urutan, reg_no_camat, reg_no_lurah, tanggal_reg_lurah, tanggal_surat, tempat_tinggal_pewaris, created_by)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING id, tahun, urutan, reg_no_camat, reg_no_lurah, tanggal_reg_camat, tanggal_reg_lurah,
           tanggal_surat, tempat_tinggal_pewaris, penerima_kuasa_ahli_waris_id, status,
           created_by, created_at, updated_at;
@@ -150,9 +150,30 @@ WHERE id = ?;
 -- name: TouchBerkas :exec
 UPDATE berkas_waris SET updated_at = datetime('now') WHERE id = ?;
 
+-- name: UpdateBerkasUtama :exec
+UPDATE berkas_waris
+SET tanggal_surat = ?, tempat_tinggal_pewaris = ?, tanggal_reg_lurah = ?,
+    penerima_kuasa_ahli_waris_id = NULL, updated_at = datetime('now')
+WHERE id = ?;
+
+-- name: DeletePewarisByBerkas :exec
+DELETE FROM pewaris WHERE berkas_id = ?;
+
+-- name: DeleteAhliWarisByBerkas :exec
+DELETE FROM ahli_waris WHERE berkas_id = ?;
+
+-- name: DeleteSaksiByBerkas :exec
+DELETE FROM saksi WHERE berkas_id = ?;
+
+-- name: DeleteKuasaItemByBerkas :exec
+DELETE FROM kuasa_item WHERE berkas_id = ?;
+
 -- PEWARIS
 -- name: CountPewarisByNik :one
 SELECT COUNT(*) FROM pewaris WHERE nik = ?;
+
+-- name: CountPewarisByNikLain :one
+SELECT COUNT(*) FROM pewaris WHERE nik = ? AND berkas_id != ?;
 
 -- name: CreatePewaris :one
 INSERT INTO pewaris (berkas_id, urutan, nama, nik, status, tgl_meninggal, instansi_kematian, no_surat_kematian, tgl_surat_kematian)

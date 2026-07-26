@@ -3,7 +3,7 @@ package surat
 import "testing"
 
 func TestRegNo(t *testing.T) {
-	if got := RegNoCamat(88, 2026, "DT"); got != "88/SKAW/DT/2026" {
+	if got := RegNoCamat(2026, "DT"); got != ".../SKAW/DT/2026" {
 		t.Errorf("RegNoCamat = %q", got)
 	}
 	if got := RegNoLurah(88, 2026, "TB", "DT"); got != "88/SKAW/TB-DT/2026" {

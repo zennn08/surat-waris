@@ -23,6 +23,7 @@
     let m
     if (p === '/' || p === '') return { c: BerkasList, props: {} }
     if (p === '/berkas/baru') return { c: BerkasForm, props: {} }
+    if ((m = match('/berkas/:id/edit', p))) return { c: BerkasForm, props: { id: m.id } }
     if ((m = match('/berkas/:id', p))) return { c: BerkasDetail, props: { id: m.id }, key: m.id }
     if (p === '/pejabat') return { c: Pejabat, props: {} }
     if (p === '/pengaturan') return { c: Pengaturan, props: {} }

@@ -22,6 +22,22 @@ func (q *Queries) CountPewarisByNik(ctx context.Context, nik string) (int64, err
 	return count, err
 }
 
+const countPewarisByNikLain = `-- name: CountPewarisByNikLain :one
+SELECT COUNT(*) FROM pewaris WHERE nik = ? AND berkas_id != ?
+`
+
+type CountPewarisByNikLainParams struct {
+	Nik      string `json:"nik"`
+	BerkasID int64  `json:"berkas_id"`
+}
+
+func (q *Queries) CountPewarisByNikLain(ctx context.Context, arg CountPewarisByNikLainParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countPewarisByNikLain, arg.Nik, arg.BerkasID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countUsers = `-- name: CountUsers :one
 SELECT COUNT(*) FROM users
 `
@@ -90,21 +106,22 @@ func (q *Queries) CreateAhliWaris(ctx context.Context, arg CreateAhliWarisParams
 }
 
 const createBerkas = `-- name: CreateBerkas :one
-INSERT INTO berkas_waris (tahun, urutan, reg_no_camat, reg_no_lurah, tanggal_surat, tempat_tinggal_pewaris, created_by)
-VALUES (?, ?, ?, ?, ?, ?, ?)
+INSERT INTO berkas_waris (tahun, urutan, reg_no_camat, reg_no_lurah, tanggal_reg_lurah, tanggal_surat, tempat_tinggal_pewaris, created_by)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING id, tahun, urutan, reg_no_camat, reg_no_lurah, tanggal_reg_camat, tanggal_reg_lurah,
           tanggal_surat, tempat_tinggal_pewaris, penerima_kuasa_ahli_waris_id, status,
           created_by, created_at, updated_at
 `
 
 type CreateBerkasParams struct {
-	Tahun                int64         `json:"tahun"`
-	Urutan               int64         `json:"urutan"`
-	RegNoCamat           string        `json:"reg_no_camat"`
-	RegNoLurah           string        `json:"reg_no_lurah"`
-	TanggalSurat         string        `json:"tanggal_surat"`
-	TempatTinggalPewaris string        `json:"tempat_tinggal_pewaris"`
-	CreatedBy            sql.NullInt64 `json:"created_by"`
+	Tahun                int64          `json:"tahun"`
+	Urutan               int64          `json:"urutan"`
+	RegNoCamat           string         `json:"reg_no_camat"`
+	RegNoLurah           string         `json:"reg_no_lurah"`
+	TanggalRegLurah      sql.NullString `json:"tanggal_reg_lurah"`
+	TanggalSurat         string         `json:"tanggal_surat"`
+	TempatTinggalPewaris string         `json:"tempat_tinggal_pewaris"`
+	CreatedBy            sql.NullInt64  `json:"created_by"`
 }
 
 func (q *Queries) CreateBerkas(ctx context.Context, arg CreateBerkasParams) (BerkasWaris, error) {
@@ -113,6 +130,7 @@ func (q *Queries) CreateBerkas(ctx context.Context, arg CreateBerkasParams) (Ber
 		arg.Urutan,
 		arg.RegNoCamat,
 		arg.RegNoLurah,
+		arg.TanggalRegLurah,
 		arg.TanggalSurat,
 		arg.TempatTinggalPewaris,
 		arg.CreatedBy,
@@ -315,12 +333,30 @@ func (q *Queries) DeactivatePejabatByJabatan(ctx context.Context, jabatan string
 	return err
 }
 
+const deleteAhliWarisByBerkas = `-- name: DeleteAhliWarisByBerkas :exec
+DELETE FROM ahli_waris WHERE berkas_id = ?
+`
+
+func (q *Queries) DeleteAhliWarisByBerkas(ctx context.Context, berkasID int64) error {
+	_, err := q.db.ExecContext(ctx, deleteAhliWarisByBerkas, berkasID)
+	return err
+}
+
 const deleteKuasaItem = `-- name: DeleteKuasaItem :exec
 DELETE FROM kuasa_item WHERE id = ?
 `
 
 func (q *Queries) DeleteKuasaItem(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteKuasaItem, id)
+	return err
+}
+
+const deleteKuasaItemByBerkas = `-- name: DeleteKuasaItemByBerkas :exec
+DELETE FROM kuasa_item WHERE berkas_id = ?
+`
+
+func (q *Queries) DeleteKuasaItemByBerkas(ctx context.Context, berkasID int64) error {
+	_, err := q.db.ExecContext(ctx, deleteKuasaItemByBerkas, berkasID)
 	return err
 }
 
@@ -339,6 +375,24 @@ DELETE FROM pejabat WHERE id = ?
 
 func (q *Queries) DeletePejabat(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deletePejabat, id)
+	return err
+}
+
+const deletePewarisByBerkas = `-- name: DeletePewarisByBerkas :exec
+DELETE FROM pewaris WHERE berkas_id = ?
+`
+
+func (q *Queries) DeletePewarisByBerkas(ctx context.Context, berkasID int64) error {
+	_, err := q.db.ExecContext(ctx, deletePewarisByBerkas, berkasID)
+	return err
+}
+
+const deleteSaksiByBerkas = `-- name: DeleteSaksiByBerkas :exec
+DELETE FROM saksi WHERE berkas_id = ?
+`
+
+func (q *Queries) DeleteSaksiByBerkas(ctx context.Context, berkasID int64) error {
+	_, err := q.db.ExecContext(ctx, deleteSaksiByBerkas, berkasID)
 	return err
 }
 
@@ -937,6 +991,30 @@ func (q *Queries) UpdateAhliWarisPelengkap(ctx context.Context, arg UpdateAhliWa
 		arg.Pekerjaan,
 		arg.ID,
 		arg.BerkasID,
+	)
+	return err
+}
+
+const updateBerkasUtama = `-- name: UpdateBerkasUtama :exec
+UPDATE berkas_waris
+SET tanggal_surat = ?, tempat_tinggal_pewaris = ?, tanggal_reg_lurah = ?,
+    penerima_kuasa_ahli_waris_id = NULL, updated_at = datetime('now')
+WHERE id = ?
+`
+
+type UpdateBerkasUtamaParams struct {
+	TanggalSurat         string         `json:"tanggal_surat"`
+	TempatTinggalPewaris string         `json:"tempat_tinggal_pewaris"`
+	TanggalRegLurah      sql.NullString `json:"tanggal_reg_lurah"`
+	ID                   int64          `json:"id"`
+}
+
+func (q *Queries) UpdateBerkasUtama(ctx context.Context, arg UpdateBerkasUtamaParams) error {
+	_, err := q.db.ExecContext(ctx, updateBerkasUtama,
+		arg.TanggalSurat,
+		arg.TempatTinggalPewaris,
+		arg.TanggalRegLurah,
+		arg.ID,
 	)
 	return err
 }

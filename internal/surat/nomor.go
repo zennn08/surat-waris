@@ -7,9 +7,10 @@ import (
 	"strings"
 )
 
-// RegNoCamat: "{urutan}/SKAW/{kode_kecamatan}/{tahun}" → "88/SKAW/DT/2026".
-func RegNoCamat(urutan, tahun int, kodeKecamatan string) string {
-	return fmt.Sprintf("%d/SKAW/%s/%d", urutan, kodeKecamatan, tahun)
+// RegNoCamat: ".../SKAW/{kode_kecamatan}/{tahun}" → ".../SKAW/DT/2026".
+// Nomor urut sengaja titik-titik: diisi tulis tangan oleh pihak kecamatan.
+func RegNoCamat(tahun int, kodeKecamatan string) string {
+	return fmt.Sprintf(".../SKAW/%s/%d", kodeKecamatan, tahun)
 }
 
 // RegNoLurah: "{urutan}/SKAW/{kode_kelurahan}-{kode_kecamatan}/{tahun}"

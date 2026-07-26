@@ -27,6 +27,7 @@ type cetakData struct {
 	Terbilang       string // ejaan jumlah ahli waris, mis. "Empat"
 	TanggalID       string // "10 Juli 2026"
 	TempatTanggal   string // "Dumai, 10 Juli 2026"
+	TanggalCetak    string // tanggal hari ini, untuk footer sistem
 }
 
 var bulanID = [...]string{
@@ -84,6 +85,7 @@ func (h *Handler) Cetak(w http.ResponseWriter, r *http.Request) {
 		Terbilang:       surat.Terbilang(len(detail.AhliWaris)),
 		TanggalID:       tglID,
 		TempatTanggal:   tempatTanggal(pv.Kota, tglID),
+		TanggalCetak:    formatTanggalID(time.Now().Format("2006-01-02")),
 	}
 
 	// Bagi ahli waris menjadi penerima & pemberi kuasa (untuk Surat Kuasa).
