@@ -102,6 +102,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
   await sleep(4300)
   await shot('14-detail', { fullPage: true })
 
+  // 8b. Halaman ubah berkas (wizard sama, terisi data lama)
+  await page.click('a:has-text("Ubah Berkas")')
+  await page.waitForSelector('h1:has-text("Ubah Berkas Waris")')
+  await sleep(400)
+  await shot('17-ubah-berkas')
+
   // 9. Halaman cetak
   await page.goto(BASE + '/berkas/1/cetak')
   await page.waitForSelector('.judul')

@@ -16,7 +16,7 @@ Surat Pernyataan Ahli Waris) dalam 3 halaman A4.
 2. [Login Pertama Kali](#2-login-pertama-kali)
 3. [Persiapan Awal (Wajib, Sekali Saja)](#3-persiapan-awal-wajib-sekali-saja)
 4. [Membuat Berkas Waris](#4-membuat-berkas-waris)
-5. [Melihat Detail & Mengubah Surat Kuasa](#5-melihat-detail--mengubah-surat-kuasa)
+5. [Melihat Detail & Merevisi Berkas](#5-melihat-detail--merevisi-berkas)
 6. [Mencetak / Menyimpan PDF](#6-mencetak--menyimpan-pdf)
 7. [Mencari Berkas](#7-mencari-berkas)
 8. [Melanjutkan Nomor dari Pembukuan Manual](#8-melanjutkan-nomor-dari-pembukuan-manual)
@@ -85,8 +85,11 @@ Buka menu **Pengaturan**, isi identitas kelurahan (contoh):
 | Kode Kelurahan | `JM` |
 | Instansi Penerbit Surat Kematian | *(sudah terisi otomatis:* `Dinas Kependudukan dan Pencatatan Sipil Kota Dumai`*)* |
 
-Kode dipakai untuk nomor registrasi, contohnya `12/SKAW/DT/2026` (Camat) dan
-`12/SKAW/JM-DT/2026` (Lurah). Klik **Simpan Pengaturan**.
+Kode dipakai untuk nomor registrasi Kelurahan, contohnya `12/SKAW/JM-DT/2026`,
+dengan tanggal register otomatis mengikuti tanggal surat. Nomor register Camat
+tercetak `.../SKAW/DT/2026` dengan tanggal titik-titik — nomor urut dan
+tanggalnya sengaja dikosongkan untuk **diisi tulis tangan oleh pihak
+kecamatan**. Klik **Simpan Pengaturan**.
 
 ![Halaman pengaturan](img/07-pengaturan.png)
 
@@ -137,8 +140,7 @@ Pilih **satu ahli waris sebagai penerima kuasa**; ahli waris lainnya otomatis
 menjadi pemberi kuasa. Lengkapi data pelengkap penerima kuasa (tempat/tanggal
 lahir, pekerjaan) — ini tercetak di Surat Kuasa. Lalu tuliskan
 **urusan yang dikuasakan** apa adanya, persis seperti akan tercetak
-(contoh: pengurusan BPJS, tabungan bank, balik nama, dll). Bagian ini masih
-bisa diubah kapan saja setelah berkas disimpan.
+(contoh: pengurusan BPJS, tabungan bank, balik nama, dll).
 
 ![Langkah 5](img/12-langkah5-surat-kuasa.png)
 
@@ -147,22 +149,30 @@ bisa diubah kapan saja setelah berkas disimpan.
 Semua isian dirangkum. Periksa baik-baik; klik **Ubah** untuk kembali ke
 langkah terkait.
 
-> **Penting:** setelah klik **Simpan Berkas**, nomor registrasi Camat & Lurah
-> langsung terbit dan data **terkunci** (tidak bisa diedit) — kecuali bagian
-> Surat Kuasa. Kalau ada salah ketik, perbaiki **sebelum** menyimpan.
+Setelah klik **Simpan Berkas**, nomor registrasi Kelurahan langsung terbit.
+Tidak perlu khawatir salah ketik — **semua data masih bisa direvisi** kapan
+saja lewat tombol **✎ Ubah Berkas** di halaman detail (nomor register tidak
+berubah).
 
 ![Langkah 6](img/13-langkah6-periksa.png)
 
-## 5. Melihat Detail & Mengubah Surat Kuasa
+## 5. Melihat Detail & Merevisi Berkas
 
 Setelah tersimpan, halaman detail menampilkan kedua nomor registrasi, daftar
-3 surat yang dihasilkan, dan seluruh data berkas. Kartu bertanda 🔒 **Terkunci**
-tidak bisa diubah; kartu **Surat Kuasa** (berbingkai hijau, bertanda
-"Masih dapat diubah") tetap bisa: ganti penerima kuasa, data pelengkapnya,
-serta tambah/ubah/hapus urusan kuasa. Perubahan langsung ikut pada cetakan
-berikutnya.
+3 surat yang dihasilkan, dan seluruh data berkas.
 
 ![Detail berkas](img/14-detail.png)
+
+**Semua data berkas dapat direvisi.** Klik **✎ Ubah Berkas** — formulir
+6 langkah yang sama terbuka dengan seluruh isian lama, silakan perbaiki lalu
+klik **Simpan Revisi** di langkah terakhir. Nomor register tidak berubah, dan
+cetakan berikutnya otomatis memakai data baru.
+
+![Halaman ubah berkas](img/17-ubah-berkas.png)
+
+Khusus bagian **Surat Kuasa** (kartu berbingkai hijau di bawah halaman detail)
+juga bisa diubah cepat tanpa membuka formulir: ganti penerima kuasa, data
+pelengkapnya, serta tambah/ubah/hapus urusan kuasa.
 
 ## 6. Mencetak / Menyimpan PDF
 
@@ -177,6 +187,12 @@ dan blok tanda tangan.
 - Untuk menyimpan sebagai file, pilih printer **"Save as PDF"** di dialog cetak.
 - Pada dialog cetak, pastikan skala **100%** (bukan "Fit to page") dan ukuran
   kertas A4.
+
+Pada blok tanda tangan, kolom **Camat** tercetak dengan nomor register dan
+tanggal titik-titik (`.../SKAW/DT/2026`) untuk diisi tulis tangan oleh pihak
+kecamatan; kolom **Lurah** sudah lengkap dengan nomor dan tanggal otomatis.
+Di akhir tiap surat ada baris kecil penanda bahwa dokumen dicetak melalui
+aplikasi SIWARIS, beserta nomor register dan tanggal cetaknya.
 
 ## 7. Mencari Berkas
 
@@ -209,9 +225,9 @@ Setiap NIK pewaris hanya boleh satu berkas (pengaman surat ganda). Cari berkas
 lamanya lewat pencarian NIK, lalu pakai/cetak ulang berkas tersebut.
 
 **Data salah ketik tapi berkas sudah tersimpan, bagaimana?**
-Data dasar terkunci setelah nomor terbit. Yang masih bisa diubah hanya bagian
-Surat Kuasa. Untuk kesalahan pada data dasar, buat kebijakan koreksi sesuai
-prosedur kantor (berkas lama tetap tercatat di aplikasi).
+Buka berkasnya lalu klik **✎ Ubah Berkas** — semua data bisa diperbaiki dan
+disimpan ulang; nomor register tidak berubah
+(lihat [bagian 5](#5-melihat-detail--merevisi-berkas)).
 
 **Hasil cetak lebih dari 3 halaman?**
 Pastikan ukuran kertas di dialog cetak = A4 dan skala 100%. Berkas dengan
