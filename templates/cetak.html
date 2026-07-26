@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<title>Cetak Surat — {{.B.RegNoLurah}}</title>
+<title>Cetak Surat - {{.B.RegNoLurah}}</title>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -20,7 +20,7 @@
   .toolbar .print { background: #0f5c4d; color: #fff; }
   .toolbar .muted { color: #cbd5e1; margin-left: auto; }
 
-  .surat { background: #fff; }
+  .surat { background: #fff; position: relative; }
   .judul { text-align: center; font-weight: bold; text-decoration: underline; font-size: 12pt; text-transform: uppercase; margin-bottom: 8pt; }
   .isi p { text-align: justify; margin: 5pt 0; }
 
@@ -68,24 +68,28 @@
   .pejabat2 .jab, .pejabat1 .jab { margin-top: 2pt; }
   .pejabat2 .col.tengah { text-align: left; }
 
-  /* footer sistem: baris kecil di akhir tiap surat.
-     ponytail: sengaja in-flow, bukan position:fixed — fixed di print Chromium
-     terbukti nyangkut di atas halaman & hilang di halaman 1. */
+  /* Footer sistem: absolut di dasar tiap lembar surat. Tiap .surat diberi
+     tinggi minimum setinggi area cetak, jadi footer selalu di dasar halaman
+     walau konten sedikit. (position:fixed tak dipakai: di print Chromium
+     terbukti nyangkut di atas halaman & hilang di halaman 1.) */
   .sysfooter {
-    margin-top: 6pt; text-align: center;
+    position: absolute; left: 0; right: 0; text-align: center;
     font-family: 'Segoe UI', Arial, sans-serif; font-size: 6pt; line-height: 1; color: #777;
   }
 
   @media screen {
     body { padding: 60px 0 40px; }
     .surat { width: 21cm; min-height: 29.7cm; padding: 2.5cm; margin: 0 auto 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,.25); }
+    .sysfooter { bottom: 1.2cm; }
   }
   @media print {
     body { background: #fff; padding: 0; }
     .toolbar { display: none; }
     @page { size: A4; margin: 2.2cm 2.5cm; }
-    .surat { width: auto; min-height: auto; padding: 0; margin: 0; page-break-after: always; }
+    /* area cetak A4 = 29,7 - 2×2,2 = 25,3cm; 25,2cm menyisakan toleransi pembulatan */
+    .surat { width: auto; min-height: 25.2cm; padding: 0; margin: 0; page-break-after: always; }
     .surat:last-child { page-break-after: auto; }
+    .sysfooter { bottom: 0; }
     /* bila data sangat banyak dan surat terpaksa meluber, pecah di tempat rapi */
     table.tbl tr, .ttd2, .pejabat2, .pejabat1 { page-break-inside: avoid; }
   }
@@ -93,7 +97,7 @@
 </head>
 <body>
 <div class="toolbar">
-  <button class="print" onclick="window.print()">🖨 Cetak / Simpan PDF</button>
+  <button class="print" onclick="window.print()">Cetak / Simpan PDF</button>
   <button onclick="window.close()">Tutup</button>
   <span class="muted">A4 · Times New Roman · 3 surat = 3 halaman</span>
 </div>
@@ -344,7 +348,7 @@
 {{end}}
 
 {{define "sysfooter"}}
-<div class="sysfooter">Dokumen ini dicetak melalui aplikasi SIWARIS (Sistem Informasi Surat Ahli Waris) — Reg. No. {{.B.RegNoLurah}} · dicetak pada {{.TanggalCetak}}</div>
+<div class="sysfooter">Dokumen ini dicetak melalui aplikasi SIWARIS (Sistem Informasi Surat Ahli Waris), Reg. No. {{.B.RegNoLurah}}, tanggal cetak {{.TanggalCetak}}</div>
 {{end}}
 
 {{define "pejabatLurah"}}

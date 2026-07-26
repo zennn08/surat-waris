@@ -15,7 +15,7 @@ export function digitsOnly(node) {
 }
 
 export function fmtDate(s) {
-  if (!s || !/^\d{4}-\d{2}-\d{2}/.test(s)) return s || '—'
+  if (!s || !/^\d{4}-\d{2}-\d{2}/.test(s)) return s || '-'
   const d = new Date(s)
   return isNaN(d) ? s : fmt.format(d)
 }

@@ -88,11 +88,11 @@
     } catch (e) { notify(e.message, 'error') }
   }
 
-  function jk(v) { return v === 'L' ? 'Laki-laki' : v === 'P' ? 'Perempuan' : (v || '—') }
+  function jk(v) { return v === 'L' ? 'Laki-laki' : v === 'P' ? 'Perempuan' : (v || '-') }
   function statusLabel(s) { return s === 'istri' ? 'Istri' : 'Suami' }
   function saksiTTL(s) {
     const t = [s.tempat_lahir, s.tgl_lahir ? fmtDate(s.tgl_lahir) : ''].filter(Boolean).join(', ')
-    return t || '—'
+    return t || '-'
   }
 
   onMount(load)
@@ -114,12 +114,12 @@
     </div>
     <div class="flex gap">
       <a class="btn" href="#/">← Kembali ke Daftar</a>
-      <a class="btn" href={`#/berkas/${id}/edit`}>✎ Ubah Berkas</a>
+      <a class="btn" href={`#/berkas/${id}/edit`}>Ubah Berkas</a>
       <a class="btn btn-primary" href={`/berkas/${id}/cetak`} target="_blank" rel="noopener">Cetak 3 Surat</a>
     </div>
   </div>
   <p class="page-sub">
-    Semua data berkas masih dapat direvisi lewat tombol <strong>“✎ Ubah Berkas”</strong>;
+    Semua data berkas masih dapat direvisi lewat tombol <strong>“Ubah Berkas”</strong>;
     nomor register tidak berubah. Khusus bagian Surat Kuasa juga bisa diubah cepat di bawah.
   </p>
 
@@ -164,7 +164,7 @@
         <thead><tr><th>Nama</th><th>Status</th><th>NIK</th><th>Tgl Meninggal</th><th>Instansi Kematian</th><th>No. Surat</th><th>Tgl Surat</th></tr></thead>
         <tbody>
           {#each berkas.pewaris as p}
-            <tr><td>{p.nama}</td><td>{statusLabel(p.status)}</td><td class="mono">{p.nik}</td><td>{fmtDate(p.tgl_meninggal)}</td><td>{p.instansi_kematian || '—'}</td><td>{p.no_surat_kematian}</td><td>{fmtDate(p.tgl_surat_kematian)}</td></tr>
+            <tr><td>{p.nama}</td><td>{statusLabel(p.status)}</td><td class="mono">{p.nik}</td><td>{fmtDate(p.tgl_meninggal)}</td><td>{p.instansi_kematian || '-'}</td><td>{p.no_surat_kematian}</td><td>{fmtDate(p.tgl_surat_kematian)}</td></tr>
           {/each}
         </tbody>
       </table>
@@ -181,8 +181,8 @@
           {#each berkas.ahli_waris as a}
             <tr>
               <td>{a.nama}{#if a.id === berkas.penerima_kuasa_ahli_waris_id}&nbsp;<span class="badge badge-blue">Penerima Kuasa</span>{/if}</td>
-              <td class="mono">{a.nik}</td><td>{a.umur ?? '—'}</td><td>{jk(a.jenis_kelamin)}</td>
-              <td>{a.agama || '—'}</td><td>{a.alamat || '—'}</td><td>{a.keterangan || '—'}</td>
+              <td class="mono">{a.nik}</td><td>{a.umur ?? '-'}</td><td>{jk(a.jenis_kelamin)}</td>
+              <td>{a.agama || '-'}</td><td>{a.alamat || '-'}</td><td>{a.keterangan || '-'}</td>
             </tr>
           {/each}
         </tbody>
@@ -198,7 +198,7 @@
         <thead><tr><th>Nama</th><th>Tempat/Tgl Lahir</th><th>NIK</th><th>Alamat</th><th>Hubungan</th></tr></thead>
         <tbody>
           {#each berkas.saksi as s}
-            <tr><td>{s.nama}</td><td>{saksiTTL(s)}</td><td class="mono">{s.nik || '—'}</td><td>{s.alamat || '—'}</td><td>{s.hubungan || '—'}</td></tr>
+            <tr><td>{s.nama}</td><td>{saksiTTL(s)}</td><td class="mono">{s.nik || '-'}</td><td>{s.alamat || '-'}</td><td>{s.hubungan || '-'}</td></tr>
           {/each}
         </tbody>
       </table>
@@ -210,7 +210,7 @@
     <div class="card card-editable" style="margin-top:0;">
       <div class="card-title mb-0" style="margin-bottom:1rem;">
         <h3 class="mb-0">Surat Kuasa</h3>
-        <span class="badge badge-blue">✎ Masih dapat diubah</span>
+        <span class="badge badge-blue">Masih dapat diubah</span>
       </div>
       <div class="section-sub">
         Perubahan di sini langsung tersimpan ke berkas dan ikut pada cetakan berikutnya.
@@ -220,7 +220,7 @@
         <label>Penerima Kuasa</label>
         <div class="flex gap">
           <select class="grow" bind:value={penerimaSel}>
-            <option value={null}>— Belum dipilih —</option>
+            <option value={null}>- Belum dipilih -</option>
             {#each berkas.ahli_waris as a}<option value={a.id}>{a.nama}</option>{/each}
           </select>
           <button class="btn btn-primary" on:click={savePenerima}>Simpan</button>
@@ -228,7 +228,7 @@
       </div>
 
       {#if berkas.penerima_kuasa_ahli_waris_id}
-        <div class="section-sub mt-2">Data pelengkap penerima kuasa — tercetak pada Surat Kuasa.</div>
+        <div class="section-sub mt-2">Data pelengkap penerima kuasa, tercetak pada Surat Kuasa.</div>
         <div class="row row-3">
           <div class="field mb-0"><label>Tempat Lahir</label><input bind:value={pelengkap.tempat_lahir} /></div>
           <div class="field mb-0"><label>Tanggal Lahir</label><input type="date" bind:value={pelengkap.tgl_lahir} /></div>

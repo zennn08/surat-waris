@@ -315,7 +315,7 @@
             </div>
             <div class="field"><label>Agama</label>
               <select bind:value={a.agama}>
-                <option value="">— Pilih —</option>
+                <option value="">- Pilih -</option>
                 {#each AGAMA as ag}<option value={ag}>{ag}</option>{/each}
               </select>
             </div>
@@ -376,7 +376,7 @@
       <div class="field" style="max-width:460px;">
         <label>Penerima Kuasa</label>
         <select bind:value={penerima_kuasa_index}>
-          <option value={null}>— Belum dipilih —</option>
+          <option value={null}>- Belum dipilih -</option>
           {#each ahli_waris as a, i}
             <option value={i}>{namaAtau(a, i)}</option>
           {/each}
@@ -384,7 +384,7 @@
       </div>
 
       {#if penerima_kuasa_index !== null}
-        <div class="section-sub">Data pelengkap penerima kuasa — tercetak pada Surat Kuasa.</div>
+        <div class="section-sub">Data pelengkap penerima kuasa, tercetak pada Surat Kuasa.</div>
         <div class="row row-3">
           <div class="field"><label>Tempat Lahir</label><input bind:value={ahli_waris[penerima_kuasa_index].tempat_lahir} /></div>
           <div class="field"><label>Tanggal Lahir</label><input type="date" bind:value={ahli_waris[penerima_kuasa_index].tgl_lahir} /></div>
@@ -424,14 +424,14 @@
 
     <div class="review-row">
       <div class="rv-label">Data Berkas</div>
-      <div class="rv-value">Tanggal surat {fmtDate(tanggal_surat)} · Tempat tinggal: {tempat_tinggal_pewaris || '—'}</div>
+      <div class="rv-value">Tanggal surat {fmtDate(tanggal_surat)} · Tempat tinggal: {tempat_tinggal_pewaris || '-'}</div>
       <button type="button" class="btn btn-sm" on:click={() => goTo(1)}>Ubah</button>
     </div>
     <div class="review-row">
       <div class="rv-label">Pewaris</div>
       <div class="rv-value">
         {#each pewaris as p, i}
-          <div>{i + 1}. {p.nama || '—'} ({p.status === 'istri' ? 'Istri' : 'Suami'}) — meninggal {fmtDate(p.tgl_meninggal)}</div>
+          <div>{i + 1}. {p.nama || '-'} ({p.status === 'istri' ? 'Istri' : 'Suami'}), meninggal {fmtDate(p.tgl_meninggal)}</div>
         {/each}
       </div>
       <button type="button" class="btn btn-sm" on:click={() => goTo(2)}>Ubah</button>
@@ -441,7 +441,7 @@
       <div class="rv-value">
         {#each ahli_waris as a, i}
           <div>
-            {i + 1}. {a.nama || '—'}{a.keterangan ? ` (${a.keterangan})` : ''}
+            {i + 1}. {a.nama || '-'}{a.keterangan ? ` (${a.keterangan})` : ''}
             {#if penerima_kuasa_index === i}&nbsp;<span class="badge badge-blue">Penerima Kuasa</span>{/if}
           </div>
         {/each}
@@ -451,7 +451,7 @@
     <div class="review-row">
       <div class="rv-label">Saksi</div>
       <div class="rv-value">
-        {#each saksi as s, i}<div>{i + 1}. {s.nama || '—'}{s.hubungan ? ` (${s.hubungan})` : ''}</div>{/each}
+        {#each saksi as s, i}<div>{i + 1}. {s.nama || '-'}{s.hubungan ? ` (${s.hubungan})` : ''}</div>{/each}
       </div>
       <button type="button" class="btn btn-sm" on:click={() => goTo(4)}>Ubah</button>
     </div>
@@ -475,7 +475,7 @@
       Nomor register tidak berubah.
     {:else}
       Setelah disimpan, nomor register Kelurahan langsung terbit. Tidak perlu
-      khawatir salah — <strong>semua data masih bisa diubah</strong> lewat tombol
+      khawatir salah: <strong>semua data masih bisa diubah</strong> lewat tombol
       “Ubah Berkas” di halaman detail.
     {/if}
   </div>

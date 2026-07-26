@@ -29,7 +29,7 @@
   }
 
   function pewarisNames(b) {
-    return (b.pewaris || []).map((p) => p.nama).join(', ') || '—'
+    return (b.pewaris || []).map((p) => p.nama).join(', ') || '-'
   }
 
   onMount(load)
@@ -58,7 +58,7 @@
       {#if q.trim()}
         Tidak ada berkas yang cocok dengan “{q.trim()}”. Coba kata kunci lain.
       {:else}
-        Belum ada berkas. Klik “Buat Berkas Baru” — nomor registrasi dibuat otomatis saat berkas disimpan.
+        Belum ada berkas. Klik “Buat Berkas Baru”; nomor registrasi dibuat otomatis saat berkas disimpan.
       {/if}
     </div>
   {:else}
