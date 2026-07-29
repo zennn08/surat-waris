@@ -8,6 +8,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -30,7 +31,10 @@ type updater struct {
 	restart func() // di-set di main setelah server berdiri
 }
 
-// latestVersion membaca tag rilis terbaru dari header redirect GitHub.
+// latestVersion membaca tag rilis terbaru: coba header redirect GitHub dulu
+// (tanpa batas laju), lalu fallback ke REST API. Redirect terbukti bisa
+// sementara menunjuk halaman indeks (bukan /tag/...) sesaat setelah rilis
+// dihapus atau ditata ulang.
 func latestVersion(ctx context.Context) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, releaseLatestURL, nil)
 	if err != nil {
@@ -46,11 +50,36 @@ func latestVersion(ctx context.Context) (string, error) {
 	}
 	resp.Body.Close()
 	loc := resp.Header.Get("Location")
-	i := strings.LastIndex(loc, "/tag/")
-	if i < 0 {
-		return "", fmt.Errorf("redirect rilis tidak dikenali: %q", loc)
+	if i := strings.LastIndex(loc, "/tag/"); i >= 0 {
+		return loc[i+len("/tag/"):], nil
 	}
-	return loc[i+len("/tag/"):], nil
+	return latestVersionAPI(ctx)
+}
+
+func latestVersionAPI(ctx context.Context) (string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
+		"https://api.github.com/repos/zennn08/surat-waris/releases/latest", nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := (&http.Client{Timeout: 8 * time.Second}).Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("API rilis: HTTP %d", resp.StatusCode)
+	}
+	var out struct {
+		TagName string `json:"tag_name"`
+	}
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&out); err != nil {
+		return "", err
+	}
+	if out.TagName == "" {
+		return "", fmt.Errorf("API rilis: tag kosong")
+	}
+	return out.TagName, nil
 }
 
 func parseVer(v string) (out [3]int, ok bool) {
