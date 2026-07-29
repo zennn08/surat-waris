@@ -136,7 +136,7 @@ func validateImport(path string) error {
 		return fmt.Errorf("file tidak bisa dibuka sebagai database")
 	}
 	defer up.Close()
-	if err := db.Migrate(up); err != nil {
+	if err := db.Migrate(up, ""); err != nil {
 		return fmt.Errorf("file bukan database SIWARIS yang valid")
 	}
 	for _, t := range []string{"users", "pengaturan", "berkas_waris"} {

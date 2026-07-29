@@ -3,10 +3,18 @@ package db
 import (
 	_ "embed"
 	"database/sql"
+	"errors"
 	"fmt"
+	"log"
+	"os"
+	"path/filepath"
 
 	_ "modernc.org/sqlite"
 )
+
+// ErrDBNewer: database dibuat oleh versi aplikasi yang lebih baru. Menolak
+// jalan lebih aman daripada membaca skema yang tidak dikenal (proteksi downgrade).
+var ErrDBNewer = errors.New("skema database lebih baru dari versi aplikasi ini")
 
 //go:embed schema.sql
 var schemaSQL string
@@ -43,10 +51,25 @@ func Open(path string) (*sql.DB, error) {
 }
 
 // Migrate menjalankan migrasi yang belum diterapkan berdasarkan user_version.
-func Migrate(sqldb *sql.DB) error {
+// backupDir tidak kosong: sebelum migrasi pada DB berisi data, salinan
+// pra-migrasi disimpan di sana (jaring pengaman upgrade; untuk kembali ke
+// versi lama, impor file itu). backupDir kosong = tanpa cadangan (mis. saat
+// memvalidasi file impor).
+func Migrate(sqldb *sql.DB, backupDir string) error {
 	var current int
 	if err := sqldb.QueryRow("PRAGMA user_version").Scan(&current); err != nil {
 		return fmt.Errorf("baca user_version: %w", err)
+	}
+	if current > len(migrations) {
+		return fmt.Errorf("%w (versi skema %d, aplikasi mendukung sampai %d)", ErrDBNewer, current, len(migrations))
+	}
+	if backupDir != "" && current > 0 && current < len(migrations) {
+		backup := filepath.Join(backupDir, fmt.Sprintf("surat-waris-pra-migrasi-v%d.db", current))
+		os.Remove(backup) // VACUUM INTO menolak file yang sudah ada
+		if _, err := sqldb.Exec("VACUUM INTO ?", backup); err != nil {
+			return fmt.Errorf("cadangan pra-migrasi: %w", err)
+		}
+		log.Printf("cadangan pra-migrasi dibuat: %s", backup)
 	}
 
 	for i := current; i < len(migrations); i++ {

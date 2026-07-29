@@ -36,7 +36,18 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	seedOnly := flag.Bool("seed", false, "jalankan seeder lalu keluar")
+	portFlag := flag.String("port", defaultPort, "port HTTP (dipakai internal saat pembaruan otomatis)")
 	flag.Parse()
+	// --port eksplisit = proses hasil pembaruan otomatis: tunggu port lama
+	// dilepas proses sebelumnya dan jangan buka tab browser baru.
+	spawned := false
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == "port" {
+			spawned = true
+		}
+	})
+
+	cleanupOldExe()
 
 	sqldb, err := openDB()
 	if err != nil {
@@ -44,7 +55,19 @@ func main() {
 	}
 	defer sqldb.Close()
 
-	if err := db.Migrate(sqldb); err != nil {
+	dir, err := exeDir()
+	if err != nil {
+		log.Fatalf("gagal menentukan folder aplikasi: %v", err)
+	}
+	if err := db.Migrate(sqldb, dir); err != nil {
+		if errors.Is(err, db.ErrDBNewer) {
+			sqldb.Close()
+			fatalPage("Database dari versi lebih baru",
+				"File data <b>surat-waris.db</b> dibuat oleh versi aplikasi yang lebih baru, "+
+					"sehingga aplikasi versi lama ini tidak berani membukanya (mencegah kerusakan data). "+
+					"Silakan jalankan <b>siwaris.exe versi terbaru</b>. Bila memang ingin kembali ke versi lama, "+
+					"impor file cadangan <b>surat-waris-pra-migrasi-*.db</b> yang ada di folder aplikasi.")
+		}
 		log.Fatalf("gagal migrasi: %v", err)
 	}
 
@@ -59,15 +82,33 @@ func main() {
 	}
 
 	mgr := auth.NewManager()
-	r := newRouter(sqldb, q, mgr)
+	u := &updater{sqldb: sqldb}
+	r := newRouter(sqldb, q, mgr, u)
 
-	ln, port, err := listen(defaultPort)
+	ln, port, err := listen(*portFlag, spawned)
 	if err != nil {
 		log.Fatalf("gagal membuka listener: %v", err)
 	}
 
 	url := fmt.Sprintf("http://localhost:%s", port)
 	srv := &http.Server{Handler: r}
+
+	// restart pasca-pembaruan: matikan server & DB, jalankan exe baru di port
+	// yang sama, lalu keluar. Proses baru menunggu port dilepas (flag --port).
+	u.restart = func() {
+		time.Sleep(500 * time.Millisecond) // beri waktu respons /apply terkirim
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = srv.Shutdown(ctx)
+		sqldb.Close()
+		exe, err := os.Executable()
+		if err == nil {
+			if err := exec.Command(exe, "--port", port).Start(); err != nil {
+				log.Printf("gagal menjalankan exe baru: %v", err)
+			}
+		}
+		os.Exit(0)
+	}
 
 	go func() {
 		log.Printf("SIWARIS berjalan di %s", url)
@@ -77,7 +118,9 @@ func main() {
 	}()
 
 	time.Sleep(300 * time.Millisecond)
-	openBrowser(url)
+	if !spawned {
+		openBrowser(url)
+	}
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
@@ -113,7 +156,7 @@ func exeDir() (string, error) {
 	return filepath.Dir(exe), nil
 }
 
-func newRouter(sqldb *sql.DB, q *db.Queries, mgr *auth.Manager) http.Handler {
+func newRouter(sqldb *sql.DB, q *db.Queries, mgr *auth.Manager, u *updater) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -177,6 +220,10 @@ func newRouter(sqldb *sql.DB, q *db.Queries, mgr *auth.Manager) http.Handler {
 		pr.Get("/api/database/export", exportDatabase(sqldb))
 		pr.Post("/api/database/import", importDatabase(sqldb))
 
+		// Pembaruan aplikasi
+		pr.Get("/api/update/check", u.check)
+		pr.Post("/api/update/apply", u.apply)
+
 		// Halaman cetak (html/template, A4) — dibuka di tab baru.
 		pr.Get("/berkas/{id}/cetak", apiH.Cetak)
 	})
@@ -187,13 +234,22 @@ func newRouter(sqldb *sql.DB, q *db.Queries, mgr *auth.Manager) http.Handler {
 	return r
 }
 
-func listen(preferred string) (net.Listener, string, error) {
-	ln, err := net.Listen("tcp", "127.0.0.1:"+preferred)
-	if err == nil {
-		return ln, preferred, nil
+// listen membuka port pilihan; wait=true (proses hasil pembaruan) menunggu
+// sampai 10 detik agar proses lama sempat melepas port yang sama.
+func listen(preferred string, wait bool) (net.Listener, string, error) {
+	deadline := time.Now().Add(10 * time.Second)
+	for {
+		ln, err := net.Listen("tcp", "127.0.0.1:"+preferred)
+		if err == nil {
+			return ln, preferred, nil
+		}
+		if !wait || time.Now().After(deadline) {
+			break
+		}
+		time.Sleep(300 * time.Millisecond)
 	}
 	log.Printf("port %s terpakai, mencari port bebas...", preferred)
-	ln, err = net.Listen("tcp", "127.0.0.1:0")
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		return nil, "", err
 	}
@@ -203,6 +259,30 @@ func listen(preferred string) (net.Listener, string, error) {
 		return nil, "", err
 	}
 	return ln, port, nil
+}
+
+// fatalPage menampilkan pesan fatal lewat browser (build windowsgui tidak
+// punya konsol, log.Fatal tidak akan terlihat pengguna), lalu menunggu ditutup.
+func fatalPage(title, msgHTML string) {
+	ln, port, err := listen(defaultPort, false)
+	if err != nil {
+		log.Fatalf("%s", title)
+	}
+	page := fmt.Sprintf(`<!doctype html><html lang="id"><head><meta charset="utf-8"><title>SIWARIS</title></head>
+<body style="font-family:'Segoe UI',Arial,sans-serif;max-width:560px;margin:4rem auto;padding:0 1rem;color:#1a2433;line-height:1.6">
+<h2 style="color:#c62828">%s</h2><p>%s</p>
+<p style="color:#55606d;font-size:.9em">Aplikasi tidak melanjutkan proses apa pun; data Anda tidak disentuh. Tutup jendela ini setelah selesai membaca.</p>
+</body></html>`, title, msgHTML)
+	srv := &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprint(w, page)
+	})}
+	go srv.Serve(ln)
+	openBrowser(fmt.Sprintf("http://localhost:%s", port))
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+	<-stop
+	os.Exit(1)
 }
 
 func openBrowser(url string) {

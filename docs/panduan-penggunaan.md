@@ -21,8 +21,9 @@ Surat Pernyataan Ahli Waris) dalam 3 halaman A4.
 7. [Mencari Berkas & Ekspor ke Excel](#7-mencari-berkas--ekspor-ke-excel)
 8. [Melanjutkan Nomor dari Pembukuan Manual](#8-melanjutkan-nomor-dari-pembukuan-manual)
 9. [Cadangan & Pindah Data (Pindah Komputer)](#9-cadangan--pindah-data-pindah-komputer)
-10. [Mengganti Password](#10-mengganti-password)
-11. [Pertanyaan yang Sering Muncul](#11-pertanyaan-yang-sering-muncul)
+10. [Pembaruan Aplikasi Otomatis](#10-pembaruan-aplikasi-otomatis)
+11. [Mengganti Password](#11-mengganti-password)
+12. [Pertanyaan yang Sering Muncul](#12-pertanyaan-yang-sering-muncul)
 
 ---
 
@@ -249,12 +250,33 @@ mengganti, aplikasi otomatis menyimpan data lama ke file
 bisa dikembalikan dengan mengimpor file backup itu. File yang bukan hasil
 ekspor SIWARIS akan ditolak.
 
-## 10. Mengganti Password
+## 10. Pembaruan Aplikasi Otomatis
+
+Saat dibuka dan komputer sedang terhubung internet, aplikasi mengecek apakah
+ada versi baru. Bila ada, muncul strip kuning di bagian atas:
+**"Versi baru vX.Y.Z tersedia"** dengan tombol **Perbarui Sekarang**.
+
+Klik tombolnya, konfirmasi, lalu tunggu; aplikasi mengunduh versi baru,
+memasangnya, menyalakan ulang dirinya sendiri, dan halaman memuat ulang
+otomatis. Seluruh data tetap utuh. Tanpa internet, aplikasi tetap berjalan
+normal seperti biasa, hanya tidak bisa mengecek versi baru.
+
+Pengaman tambahan di balik layar:
+
+- Bila versi baru mengubah struktur database, salinan data lama disimpan
+  otomatis sebagai `surat-waris-pra-migrasi-v<N>.db` di folder aplikasi
+  sebelum perubahan dijalankan.
+- Bila `siwaris.exe` versi lama dijalankan terhadap data yang sudah dipakai
+  versi lebih baru, aplikasi menolak berjalan dan menampilkan penjelasan
+  (mencegah kerusakan data). Solusinya: jalankan versi terbaru, atau impor
+  file pra-migrasi di atas bila memang ingin kembali ke versi lama.
+
+## 11. Mengganti Password
 
 **Pengaturan → Keamanan Akun → Ganti Password.** Isi password lama dan
 password baru dua kali.
 
-## 11. Pertanyaan yang Sering Muncul
+## 12. Pertanyaan yang Sering Muncul
 
 **Kenapa tombol simpan berkas ditolak dengan pesan "Pejabat ... belum diisi"?**
 Prasyarat belum lengkap, lihat [bagian 3](#3-persiapan-awal-wajib-sekali-saja).

@@ -188,6 +188,13 @@ tbody tr:hover { background: #f7f9fc; }
   border-radius: 8px; padding: 0.8rem 1rem; font-size: 0.95rem;
 }
 
+/* Banner pembaruan aplikasi */
+.update-banner {
+  background: var(--warning-soft); border-bottom: 1px solid #efd8a8; color: var(--warning);
+  display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;
+  padding: 0.55rem 1.25rem; font-size: 0.95rem;
+}
+
 /* Dialog konfirmasi */
 dialog.confirm-dialog {
   border: none; border-top: 4px solid var(--primary); border-radius: var(--radius);
