@@ -195,6 +195,31 @@ tbody tr:hover { background: #f7f9fc; }
   padding: 0.55rem 1.25rem; font-size: 0.95rem;
 }
 
+/* Overlay saat pembaruan berjalan: blokir semua interaksi */
+.updating-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(26, 36, 51, 0.35);
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  cursor: not-allowed; user-select: none;
+  display: grid; place-items: center; padding: 1rem;
+}
+.updating-card {
+  background: var(--surface); border-top: 4px solid var(--primary);
+  border-radius: var(--radius); box-shadow: 0 16px 48px rgba(16, 24, 40, 0.25);
+  padding: 1.6rem 2rem; max-width: 420px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+}
+.updating-card span { color: var(--muted); font-size: 0.92rem; }
+.upd-spinner {
+  width: 2.2rem; height: 2.2rem; border-radius: 999px;
+  border: 4px solid var(--primary-soft); border-top-color: var(--primary);
+  animation: upd-spin 0.9s linear infinite; margin-bottom: 0.35rem;
+}
+@keyframes upd-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .upd-spinner { animation: none; }
+}
+
 /* Dialog konfirmasi */
 dialog.confirm-dialog {
   border: none; border-top: 4px solid var(--primary); border-radius: var(--radius);

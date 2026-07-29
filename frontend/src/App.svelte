@@ -128,6 +128,16 @@
   </div>
 {/if}
 
+{#if updating}
+  <div class="updating-overlay">
+    <div class="updating-card">
+      <div class="upd-spinner"></div>
+      <strong>Memperbarui aplikasi...</strong>
+      <span>Jangan tutup jendela ini. Halaman akan memuat ulang otomatis.</span>
+    </div>
+  </div>
+{/if}
+
 {#if $toast}
   <div class="toast {$toast.type}">{$toast.message}</div>
 {/if}
