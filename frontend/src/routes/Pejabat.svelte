@@ -3,6 +3,7 @@
   import { api } from '../lib/api.js'
   import { notify } from '../lib/stores.js'
   import { digitsOnly } from '../lib/format.js'
+  import ConfirmDialog from '../lib/ConfirmDialog.svelte'
 
   let items = []
   let loading = true
@@ -32,8 +33,9 @@
     } catch (e) { notify(e.message, 'error') }
   }
 
+  let dlgHapus
   async function del(p) {
-    if (!confirm(`Hapus pejabat ${p.nama}?`)) return
+    if (!(await dlgHapus.ask(`${cap(p.jabatan)} ${p.nama} akan dihapus dari daftar pejabat penandatangan.`))) return
     try { await api.del('/api/pejabat/' + p.id); await load(); notify('Pejabat dihapus', 'success') }
     catch (e) { notify(e.message, 'error') }
   }
@@ -95,3 +97,5 @@
     </div>
   {/if}
 </div>
+
+<ConfirmDialog bind:this={dlgHapus} title="Hapus pejabat?" confirmLabel="Ya, Hapus" danger />

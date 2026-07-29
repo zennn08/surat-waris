@@ -3,6 +3,7 @@
   import { api } from '../lib/api.js'
   import { notify } from '../lib/stores.js'
   import ChangePassword from './ChangePassword.svelte'
+  import ConfirmDialog from '../lib/ConfirmDialog.svelte'
 
   let form = { nama_kelurahan: '', kecamatan: '', kota: '', kode_kecamatan: '', kode_kelurahan: '', instansi_kematian: '' }
   let loading = true
@@ -34,8 +35,37 @@
     } catch (e) { notify(e.message, 'error') }
   }
 
+  // Cadangan & pindah data
+  let dlgImpor
+  let fileInput
+  let importing = false
+  async function onPickImport(e) {
+    const file = e.target.files[0]
+    e.target.value = ''
+    if (!file) return
+    const ok = await dlgImpor.ask(
+      `Seluruh data saat ini akan diganti dengan isi "${file.name}". ` +
+      'Data lama otomatis dicadangkan ke file di samping aplikasi, dan Anda akan diminta login ulang.'
+    )
+    if (!ok) return
+    importing = true
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/database/import', { method: 'POST', credentials: 'include', body: fd })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error((data && data.error) || `Gagal (HTTP ${res.status})`)
+      notify('Impor berhasil. Memuat ulang aplikasi...', 'success')
+      setTimeout(() => location.reload(), 1500)
+    } catch (err) {
+      notify(err.message, 'error')
+      importing = false
+    }
+  }
+
+  let dlgHapus
   async function delNomorAwal(tahun) {
-    if (!confirm(`Hapus setelan nomor urut awal tahun ${tahun}?`)) return
+    if (!(await dlgHapus.ask(`Setelan nomor urut awal tahun ${tahun} akan dihapus. Penomoran tahun itu kembali mulai dari 1.`))) return
     try {
       await api.del('/api/nomor-awal/' + tahun)
       nomorAwal = await api.get('/api/nomor-awal')
@@ -112,6 +142,25 @@
   </div>
 
   <div class="card mt-2">
+    <h3>Cadangan &amp; Pindah Data</h3>
+    <div class="section-sub">
+      Untuk pindah komputer atau berjaga-jaga: unduh seluruh data sebagai satu file cadangan,
+      lalu impor file itu di aplikasi tujuan.
+    </div>
+    <div class="flex gap" style="flex-wrap:wrap;">
+      <a class="btn btn-primary" href="/api/database/export" download>Unduh Cadangan (.db)</a>
+      <input type="file" accept=".db" bind:this={fileInput} style="display:none;" on:change={onPickImport} />
+      <button class="btn" disabled={importing} on:click={() => fileInput.click()}>
+        {importing ? 'Mengimpor...' : 'Impor dari File Cadangan'}
+      </button>
+    </div>
+    <div class="small muted mt-1">
+      Impor mengganti seluruh data saat ini (berkas, pejabat, pengaturan, akun).
+      Data lama otomatis dicadangkan dulu ke file di samping aplikasi.
+    </div>
+  </div>
+
+  <div class="card mt-2">
     <div class="card-title">
       <h3 class="mb-0">Keamanan Akun</h3>
       <button class="btn btn-sm" on:click={() => (showPw = !showPw)}>{showPw ? 'Tutup' : 'Ganti Password'}</button>
@@ -120,4 +169,7 @@
       <div style="max-width:420px;"><ChangePassword forced={false} /></div>
     {/if}
   </div>
+
+  <ConfirmDialog bind:this={dlgHapus} title="Hapus setelan nomor awal?" confirmLabel="Ya, Hapus" danger />
+  <ConfirmDialog bind:this={dlgImpor} title="Impor data dari cadangan?" confirmLabel="Ya, Impor & Ganti Data" danger />
 {/if}

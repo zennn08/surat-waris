@@ -160,6 +160,7 @@ func newRouter(sqldb *sql.DB, q *db.Queries, mgr *auth.Manager) http.Handler {
 
 		// Berkas waris (inti)
 		pr.Get("/api/berkas", apiH.ListBerkas)
+		pr.Get("/api/berkas/export-excel", apiH.ExportBerkasExcel)
 		pr.Post("/api/berkas", apiH.CreateBerkas)
 		pr.Get("/api/berkas/{id}", apiH.GetBerkas)
 		pr.Put("/api/berkas/{id}", apiH.UpdateBerkas)
@@ -171,6 +172,10 @@ func newRouter(sqldb *sql.DB, q *db.Queries, mgr *auth.Manager) http.Handler {
 		pr.Post("/api/berkas/{id}/kuasa", apiH.AddKuasa)
 		pr.Put("/api/berkas/{id}/kuasa/{kuasaId}", apiH.UpdateKuasa)
 		pr.Delete("/api/berkas/{id}/kuasa/{kuasaId}", apiH.DeleteKuasa)
+
+		// Cadangan & pindah data
+		pr.Get("/api/database/export", exportDatabase(sqldb))
+		pr.Post("/api/database/import", importDatabase(sqldb))
 
 		// Halaman cetak (html/template, A4) — dibuka di tab baru.
 		pr.Get("/berkas/{id}/cetak", apiH.Cetak)

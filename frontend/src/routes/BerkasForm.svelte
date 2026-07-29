@@ -4,6 +4,7 @@
   import { navigate } from '../lib/router.js'
   import { notify } from '../lib/stores.js'
   import { fmtDate, digitsOnly } from '../lib/format.js'
+  import ConfirmDialog from '../lib/ConfirmDialog.svelte'
 
   const AGAMA = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Khonghucu']
 
@@ -132,6 +133,13 @@
     penerima_kuasa_index = 0
   }
 
+  let confirmDlg
+  async function askSimpan() {
+    const msg = id
+      ? 'Seluruh data berkas ini akan diganti dengan isian terbaru. Nomor register tidak berubah.'
+      : 'Nomor register Kelurahan akan langsung terbit setelah berkas disimpan.'
+    if (await confirmDlg.ask(msg)) submit()
+  }
   async function submit() {
     error = ''
     busy = true
@@ -469,22 +477,15 @@
     </div>
   </div>
 
-  <div class="notice mt-2">
-    {#if id}
-      Menyimpan revisi akan <strong>mengganti seluruh data berkas ini</strong>.
-      Nomor register tidak berubah.
-    {:else}
-      Setelah disimpan, nomor register Kelurahan langsung terbit. Tidak perlu
-      khawatir salah: <strong>semua data masih bisa diubah</strong> lewat tombol
-      “Ubah Berkas” di halaman detail.
-    {/if}
-  </div>
-
   <div class="wiz-actions">
     <button type="button" class="btn btn-lg" on:click={back}>← Kembali</button>
-    <button type="button" class="btn btn-primary btn-lg" disabled={busy} on:click={submit}>
+    <button type="button" class="btn btn-primary btn-lg" disabled={busy} on:click={askSimpan}>
       {busy ? 'Menyimpan…' : id ? 'Simpan Revisi' : 'Simpan Berkas'}
     </button>
   </div>
+
+  <ConfirmDialog bind:this={confirmDlg}
+    title={id ? 'Simpan revisi berkas?' : 'Simpan berkas ini?'}
+    confirmLabel={id ? 'Ya, Simpan Revisi' : 'Ya, Simpan'} />
 {/if}
 {/if}

@@ -18,10 +18,11 @@ Surat Pernyataan Ahli Waris) dalam 3 halaman A4.
 4. [Membuat Berkas Waris](#4-membuat-berkas-waris)
 5. [Melihat Detail & Merevisi Berkas](#5-melihat-detail--merevisi-berkas)
 6. [Mencetak / Menyimpan PDF](#6-mencetak--menyimpan-pdf)
-7. [Mencari Berkas](#7-mencari-berkas)
+7. [Mencari Berkas & Ekspor ke Excel](#7-mencari-berkas--ekspor-ke-excel)
 8. [Melanjutkan Nomor dari Pembukuan Manual](#8-melanjutkan-nomor-dari-pembukuan-manual)
-9. [Mengganti Password](#9-mengganti-password)
-10. [Pertanyaan yang Sering Muncul](#10-pertanyaan-yang-sering-muncul)
+9. [Cadangan & Pindah Data (Pindah Komputer)](#9-cadangan--pindah-data-pindah-komputer)
+10. [Mengganti Password](#10-mengganti-password)
+11. [Pertanyaan yang Sering Muncul](#11-pertanyaan-yang-sering-muncul)
 
 ---
 
@@ -31,7 +32,8 @@ Surat Pernyataan Ahli Waris) dalam 3 halaman A4.
    lalu klik dua kali.
 2. Browser terbuka otomatis ke alamat aplikasi (biasanya `http://localhost:8080`).
 3. Seluruh data tersimpan di file `surat-waris.db` **di folder yang sama dengan
-   exe**, tidak butuh internet, dan cukup salin folder itu untuk backup.
+   exe** dan tidak butuh internet. Untuk backup atau pindah komputer, pakai
+   fitur bawaan di [bagian 9](#9-cadangan--pindah-data-pindah-komputer).
 
 ## 2. Login Pertama Kali
 
@@ -149,12 +151,14 @@ lahir, pekerjaan); ini tercetak di Surat Kuasa. Lalu tuliskan
 Semua isian dirangkum. Periksa baik-baik; klik **Ubah** untuk kembali ke
 langkah terkait.
 
-Setelah klik **Simpan Berkas**, nomor registrasi Kelurahan langsung terbit.
-Tidak perlu khawatir salah ketik: **semua data masih bisa direvisi** kapan
-saja lewat tombol **Ubah Berkas** di halaman detail (nomor register tidak
-berubah).
-
 ![Langkah 6](img/13-langkah6-periksa.png)
+
+Saat klik **Simpan Berkas**, muncul jendela konfirmasi; klik **Ya, Simpan**
+dan nomor registrasi Kelurahan langsung terbit. Tidak perlu khawatir salah
+ketik: **semua data masih bisa direvisi** kapan saja lewat tombol
+**Ubah Berkas** di halaman detail (nomor register tidak berubah).
+
+![Konfirmasi simpan](img/18-konfirmasi-simpan.png)
 
 ## 5. Melihat Detail & Merevisi Berkas
 
@@ -165,8 +169,9 @@ Setelah tersimpan, halaman detail menampilkan kedua nomor registrasi, daftar
 
 **Semua data berkas dapat direvisi.** Klik **Ubah Berkas**: formulir
 6 langkah yang sama terbuka dengan seluruh isian lama, silakan perbaiki lalu
-klik **Simpan Revisi** di langkah terakhir. Nomor register tidak berubah, dan
-cetakan berikutnya otomatis memakai data baru.
+klik **Simpan Revisi** di langkah terakhir (ada jendela konfirmasi sebelum
+data lama diganti). Nomor register tidak berubah, dan cetakan berikutnya
+otomatis memakai data baru.
 
 ![Halaman ubah berkas](img/17-ubah-berkas.png)
 
@@ -194,13 +199,20 @@ kecamatan; kolom **Lurah** sudah lengkap dengan nomor dan tanggal otomatis.
 Di bagian paling bawah tiap halaman ada baris kecil penanda bahwa dokumen
 dicetak melalui aplikasi SIWARIS, beserta nomor register dan tanggal cetaknya.
 
-## 7. Mencari Berkas
+## 7. Mencari Berkas & Ekspor ke Excel
 
 Di halaman **Daftar Berkas**, ketik pada kolom pencarian: nomor registrasi,
 nama, atau NIK pewaris. Hasil tersaring otomatis. Klik **Buka** untuk melihat
 detail berkas.
 
 ![Daftar berkas terisi](img/16-daftar.png)
+
+Klik **Ekspor Excel** (di samping tombol Buat Berkas Baru) untuk mengunduh
+daftar berkas sebagai file `siwaris-daftar-berkas-<tanggal>.xlsx`, berisi
+kolom nomor registrasi, tanggal register, nama dan NIK pewaris, tanggal
+surat, alamat, dan status. Bila kolom pencarian sedang terisi, yang diekspor
+hanya hasil pencarian itu. NIK dan nomor registrasi tersimpan sebagai teks
+sehingga digitnya tidak berubah di Excel.
 
 ## 8. Melanjutkan Nomor dari Pembukuan Manual
 
@@ -210,12 +222,39 @@ terakhir yang sudah terpakai** di buku. Berkas digital berikutnya otomatis
 melanjutkan dari nomor itu + 1. Tanpa setelan ini, penomoran mulai dari 1
 di tiap tahun.
 
-## 9. Mengganti Password
+## 9. Cadangan & Pindah Data (Pindah Komputer)
+
+Buka **Pengaturan → Cadangan & Pindah Data**.
+
+**Membuat cadangan:** klik **Unduh Cadangan (.db)**. Seluruh data (berkas,
+pejabat, pengaturan, akun) terunduh sebagai satu file
+`siwaris-cadangan-<tanggal>.db`. Simpan file ini di flashdisk atau tempat
+aman; aplikasi tidak perlu ditutup dulu. Biasakan mengunduh cadangan secara
+berkala, misalnya tiap akhir minggu.
+
+**Pindah komputer:**
+
+1. Di komputer lama: klik **Unduh Cadangan (.db)**, salin file hasil unduhan
+   ke flashdisk bersama `siwaris.exe`.
+2. Di komputer baru: jalankan `siwaris.exe`, login, lengkapi ganti password.
+3. Buka **Pengaturan → Cadangan & Pindah Data**, klik
+   **Impor dari File Cadangan**, pilih file cadangan tadi, lalu konfirmasi
+   **Ya, Impor & Ganti Data**.
+4. Aplikasi memuat ulang dan meminta login dengan **akun dari data yang
+   diimpor** (username dan password yang dipakai di komputer lama).
+
+**Catatan aman:** impor mengganti seluruh data yang sedang ada. Sebelum
+mengganti, aplikasi otomatis menyimpan data lama ke file
+`siwaris-backup-sebelum-impor-<waktu>.db` di folder aplikasi, jadi selalu
+bisa dikembalikan dengan mengimpor file backup itu. File yang bukan hasil
+ekspor SIWARIS akan ditolak.
+
+## 10. Mengganti Password
 
 **Pengaturan → Keamanan Akun → Ganti Password.** Isi password lama dan
 password baru dua kali.
 
-## 10. Pertanyaan yang Sering Muncul
+## 11. Pertanyaan yang Sering Muncul
 
 **Kenapa tombol simpan berkas ditolak dengan pesan "Pejabat ... belum diisi"?**
 Prasyarat belum lengkap, lihat [bagian 3](#3-persiapan-awal-wajib-sekali-saja).
@@ -235,8 +274,9 @@ ahli waris sangat banyak memang bisa meluber ke halaman tambahan; pemecahan
 halamannya tetap rapi (tabel/tanda tangan tidak terpotong).
 
 **Bagaimana backup data?**
-Tutup aplikasi, lalu salin file `surat-waris.db` (satu folder dengan exe) ke
-tempat aman. Memulihkan = menaruh kembali file itu di samping exe.
+Pengaturan, kartu **Cadangan & Pindah Data**, klik **Unduh Cadangan (.db)**;
+aplikasi tidak perlu ditutup. Memulihkan = **Impor dari File Cadangan** di
+kartu yang sama (lihat [bagian 9](#9-cadangan--pindah-data-pindah-komputer)).
 
 ---
 

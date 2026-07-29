@@ -97,6 +97,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
   await shot('13-langkah6-periksa', { fullPage: true })
   await page.click('button:has-text("Simpan Berkas")')
 
+  // 7b. Dialog konfirmasi simpan
+  await page.waitForSelector('dialog[open]')
+  await shot('18-konfirmasi-simpan')
+  await page.click('dialog button:has-text("Ya, Simpan")')
+
   // 8. Detail berkas
   await page.waitForSelector('h1:has-text("Berkas Waris")')
   await sleep(4300)

@@ -3,6 +3,7 @@
   import { api } from '../lib/api.js'
   import { notify } from '../lib/stores.js'
   import { fmtDate } from '../lib/format.js'
+  import ConfirmDialog from '../lib/ConfirmDialog.svelte'
 
   export let id
 
@@ -79,8 +80,9 @@
     } catch (e) { notify(e.message, 'error') }
   }
 
+  let dlgHapus
   async function delKuasa(k) {
-    if (!confirm('Hapus urusan kuasa ini?')) return
+    if (!(await dlgHapus.ask('Urusan kuasa ini akan dihapus dari berkas dan tidak ikut tercetak lagi.'))) return
     try {
       await api.del(`/api/berkas/${id}/kuasa/${k.id}`)
       await load()
@@ -208,10 +210,7 @@
   <!-- EDIT: Surat Kuasa -->
   <div class="mt-3">
     <div class="card card-editable" style="margin-top:0;">
-      <div class="card-title mb-0" style="margin-bottom:1rem;">
-        <h3 class="mb-0">Surat Kuasa</h3>
-        <span class="badge badge-blue">Masih dapat diubah</span>
-      </div>
+      <h3>Surat Kuasa</h3>
       <div class="section-sub">
         Perubahan di sini langsung tersimpan ke berkas dan ikut pada cetakan berikutnya.
       </div>
@@ -257,4 +256,6 @@
       </div>
     </div>
   </div>
+
+  <ConfirmDialog bind:this={dlgHapus} title="Hapus urusan kuasa?" confirmLabel="Ya, Hapus" danger />
 {/if}

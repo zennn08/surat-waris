@@ -37,7 +37,12 @@
 
 <div class="card-title">
   <h1 class="mb-0">Daftar Berkas Waris</h1>
-  <button class="btn btn-primary" on:click={() => navigate('/berkas/baru')}>+ Buat Berkas Baru</button>
+  <div class="flex gap">
+    <a class="btn" href={q.trim() ? `/api/berkas/export-excel?q=${encodeURIComponent(q.trim())}` : '/api/berkas/export-excel'} download>
+      Ekspor Excel
+    </a>
+    <button class="btn btn-primary" on:click={() => navigate('/berkas/baru')}>+ Buat Berkas Baru</button>
+  </div>
 </div>
 <p class="page-sub">Satu berkas berisi data lengkap satu urusan waris dan mencetak 3 surat sekaligus.</p>
 
