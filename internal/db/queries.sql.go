@@ -50,9 +50,9 @@ func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
 }
 
 const createAhliWaris = `-- name: CreateAhliWaris :one
-INSERT INTO ahli_waris (berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, tempat_lahir, tgl_lahir, pekerjaan)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, tempat_lahir, tgl_lahir, pekerjaan
+INSERT INTO ahli_waris (berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, dari_istri, tempat_lahir, tgl_lahir, pekerjaan)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, dari_istri, tempat_lahir, tgl_lahir, pekerjaan
 `
 
 type CreateAhliWarisParams struct {
@@ -65,6 +65,7 @@ type CreateAhliWarisParams struct {
 	Agama        sql.NullString `json:"agama"`
 	Alamat       sql.NullString `json:"alamat"`
 	Keterangan   sql.NullString `json:"keterangan"`
+	DariIstri    sql.NullString `json:"dari_istri"`
 	TempatLahir  sql.NullString `json:"tempat_lahir"`
 	TglLahir     sql.NullString `json:"tgl_lahir"`
 	Pekerjaan    sql.NullString `json:"pekerjaan"`
@@ -82,6 +83,7 @@ func (q *Queries) CreateAhliWaris(ctx context.Context, arg CreateAhliWarisParams
 		arg.Agama,
 		arg.Alamat,
 		arg.Keterangan,
+		arg.DariIstri,
 		arg.TempatLahir,
 		arg.TglLahir,
 		arg.Pekerjaan,
@@ -98,6 +100,7 @@ func (q *Queries) CreateAhliWaris(ctx context.Context, arg CreateAhliWarisParams
 		&i.Agama,
 		&i.Alamat,
 		&i.Keterangan,
+		&i.DariIstri,
 		&i.TempatLahir,
 		&i.TglLahir,
 		&i.Pekerjaan,
@@ -406,7 +409,7 @@ func (q *Queries) EnsurePengaturanRow(ctx context.Context) error {
 }
 
 const getAhliWaris = `-- name: GetAhliWaris :one
-SELECT id, berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, tempat_lahir, tgl_lahir, pekerjaan
+SELECT id, berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, dari_istri, tempat_lahir, tgl_lahir, pekerjaan
 FROM ahli_waris
 WHERE id = ?
 `
@@ -425,6 +428,7 @@ func (q *Queries) GetAhliWaris(ctx context.Context, id int64) (AhliWaris, error)
 		&i.Agama,
 		&i.Alamat,
 		&i.Keterangan,
+		&i.DariIstri,
 		&i.TempatLahir,
 		&i.TglLahir,
 		&i.Pekerjaan,
@@ -603,7 +607,7 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 }
 
 const listAhliWarisByBerkas = `-- name: ListAhliWarisByBerkas :many
-SELECT id, berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, tempat_lahir, tgl_lahir, pekerjaan
+SELECT id, berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, dari_istri, tempat_lahir, tgl_lahir, pekerjaan
 FROM ahli_waris
 WHERE berkas_id = ?
 ORDER BY urutan, id
@@ -629,6 +633,7 @@ func (q *Queries) ListAhliWarisByBerkas(ctx context.Context, berkasID int64) ([]
 			&i.Agama,
 			&i.Alamat,
 			&i.Keterangan,
+			&i.DariIstri,
 			&i.TempatLahir,
 			&i.TglLahir,
 			&i.Pekerjaan,

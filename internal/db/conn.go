@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	_ "modernc.org/sqlite"
 )
@@ -30,6 +31,10 @@ var migrations = []string{
 	 VALUES (1, 'Dinas Kependudukan dan Pencatatan Sipil Kota Dumai')
 	 ON CONFLICT(id) DO UPDATE SET instansi_kematian = excluded.instansi_kematian
 	 WHERE instansi_kematian IS NULL OR instansi_kematian = '';`,
+	// v3: kolom asal istri untuk pewaris yang beristri lebih dari satu.
+	// DB baru sudah punya kolom ini dari schema.sql (v1) — ALTER-nya akan
+	// gagal "duplicate column name" dan sengaja diabaikan (lihat applyMigration).
+	`ALTER TABLE ahli_waris ADD COLUMN dari_istri TEXT;`,
 }
 
 // Open membuka/membuat SQLite di path yang diberikan dengan WAL + foreign keys.
@@ -81,6 +86,13 @@ func Migrate(sqldb *sql.DB, backupDir string) error {
 	return nil
 }
 
+// isDuplicateColumn: true bila script adalah ALTER TABLE ... ADD COLUMN dan
+// kolomnya memang sudah ada (DB yang lahir dari schema.sql terbaru).
+func isDuplicateColumn(script string, err error) bool {
+	return strings.HasPrefix(strings.ToUpper(strings.TrimSpace(script)), "ALTER TABLE") &&
+		strings.Contains(err.Error(), "duplicate column name")
+}
+
 func applyMigration(sqldb *sql.DB, script string, version int) error {
 	tx, err := sqldb.Begin()
 	if err != nil {
@@ -88,7 +100,11 @@ func applyMigration(sqldb *sql.DB, script string, version int) error {
 	}
 	defer tx.Rollback()
 
-	if _, err := tx.Exec(script); err != nil {
+	// ponytail: SQLite tak punya "ADD COLUMN IF NOT EXISTS". Kolom baru selalu
+	// ditambahkan di dua tempat (schema.sql untuk DB baru + ALTER untuk DB lama),
+	// jadi ALTER yang bentrok pada DB baru diabaikan. Kalau kelak butuh migrasi
+	// yang lebih rumit, ganti migrations jadi []func(*sql.Tx) error.
+	if _, err := tx.Exec(script); err != nil && !isDuplicateColumn(script, err) {
 		return err
 	}
 	// PRAGMA user_version tidak menerima parameter bind → format literal (int aman).

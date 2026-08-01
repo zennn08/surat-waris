@@ -81,6 +81,7 @@ type ahliWarisView struct {
 	Agama        string `json:"agama"`
 	Alamat       string `json:"alamat"`
 	Keterangan   string `json:"keterangan"`
+	DariIstri    string `json:"dari_istri"`
 	TempatLahir  string `json:"tempat_lahir"`
 	TglLahir     string `json:"tgl_lahir"`
 	Pekerjaan    string `json:"pekerjaan"`
@@ -137,6 +138,7 @@ type ahliWarisInput struct {
 	Agama        string `json:"agama"`
 	Alamat       string `json:"alamat"`
 	Keterangan   string `json:"keterangan"`
+	DariIstri    string `json:"dari_istri"`
 	TempatLahir  string `json:"tempat_lahir"`
 	TglLahir     string `json:"tgl_lahir"`
 	Pekerjaan    string `json:"pekerjaan"`
@@ -417,6 +419,7 @@ func insertAnakBerkas(ctx context.Context, qtx *db.Queries, berkasID int64, req 
 			Agama:        nullStr(strings.TrimSpace(a.Agama)),
 			Alamat:       nullStr(strings.TrimSpace(a.Alamat)),
 			Keterangan:   nullStr(strings.TrimSpace(a.Keterangan)),
+			DariIstri:    nullStr(strings.TrimSpace(a.DariIstri)),
 			TempatLahir:  nullStr(strings.TrimSpace(a.TempatLahir)),
 			TglLahir:     nullStr(strings.TrimSpace(a.TglLahir)),
 			Pekerjaan:    nullStr(strings.TrimSpace(a.Pekerjaan)),
@@ -673,6 +676,7 @@ func toAhliWarisViews(rows []db.AhliWaris) []ahliWarisView {
 			ID: a.ID, Urutan: a.Urutan, Nama: a.Nama, Nik: a.Nik,
 			JenisKelamin: strOrEmpty(a.JenisKelamin), Agama: strOrEmpty(a.Agama),
 			Alamat: strOrEmpty(a.Alamat), Keterangan: strOrEmpty(a.Keterangan),
+			DariIstri:   strOrEmpty(a.DariIstri),
 			TempatLahir: strOrEmpty(a.TempatLahir), TglLahir: strOrEmpty(a.TglLahir),
 			Pekerjaan: strOrEmpty(a.Pekerjaan),
 		}

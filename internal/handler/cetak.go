@@ -16,18 +16,63 @@ import (
 
 // cetakData adalah view-model untuk ketiga surat.
 type cetakData struct {
-	B               berkasDetail
-	Peng            pengaturanView
-	Lurah           *pejabatView
-	Camat           *pejabatView
-	PenerimaKuasa   *ahliWarisView
-	PemberiKuasa    []ahliWarisView
-	PewarisFrasa    string // "Almarhum X (Suami) dan Almarhumah Y (Istri)"
-	JumlahAhliWaris int
-	Terbilang       string // ejaan jumlah ahli waris, mis. "Empat"
-	TanggalID       string // "10 Juli 2026"
-	TempatTanggal   string // "Dumai, 10 Juli 2026"
-	TanggalCetak    string // tanggal hari ini, untuk footer sistem
+	B             berkasDetail
+	Peng          pengaturanView
+	Lurah         *pejabatView
+	Camat         *pejabatView
+	PenerimaKuasa *ahliWarisView
+	PemberiKuasa  []ahliWarisView
+	PewarisFrasa  string          // "Almarhum X (Suami) dan Almarhumah Y (Istri)"
+	Anak          []ahliWarisView // ahli waris selain istri/suami
+	JumlahAnak    int
+	TerbilangAnak string // ejaan JumlahAnak, mis. "Empat"
+	MultiIstri    bool   // pewaris beristri lebih dari satu
+	IstriFrasa    string // "SITI AMINAH dan Almarhumah RATNA DEWI"
+	TanggalID     string // "10 Juli 2026"
+	TempatTanggal string // "Dumai, 10 Juli 2026"
+	TanggalCetak  string // tanggal hari ini, untuk footer sistem
+}
+
+// pasanganStatus mengenali baris yang bukan anak: istri/suami dari pewaris.
+func pasanganStatus(keterangan string) string {
+	switch strings.ToLower(strings.TrimSpace(keterangan)) {
+	case "istri":
+		return "istri"
+	case "suami":
+		return "suami"
+	}
+	return ""
+}
+
+// istriFrasa merangkai nama para istri pewaris dari tiga sumber, urut tabel:
+// daftar pewaris (istri yang ikut jadi pewaris, diberi gelar "Almarhumah"),
+// daftar ahli waris berhubungan "Istri" (masih hidup), dan kolom "Dari Istri"
+// (istri yang sudah meninggal lebih dulu sehingga tidak masuk dua daftar tadi).
+// Kembalikan juga jumlah istri yang berbeda.
+func istriFrasa(d berkasDetail) (string, int) {
+	nama := make([]string, 0, 2)
+	seen := map[string]bool{}
+	tambah := func(n string) {
+		n = strings.TrimSpace(n)
+		k := strings.ToLower(n)
+		if n == "" || seen[k] {
+			return
+		}
+		seen[k] = true
+		nama = append(nama, n)
+	}
+	for _, p := range d.Pewaris {
+		if strings.EqualFold(strings.TrimSpace(p.Status), "istri") {
+			tambah(surat.Gelar(p.Status) + " " + p.Nama)
+		}
+	}
+	for _, a := range d.AhliWaris {
+		tambah(a.DariIstri) // ibu muncul bersama anaknya, sebelum baris istri berikutnya
+		if pasanganStatus(a.Keterangan) == "istri" {
+			tambah(a.Nama)
+		}
+	}
+	return strings.Join(nama, " dan "), len(nama)
 }
 
 var bulanID = [...]string{
@@ -75,17 +120,30 @@ func (h *Handler) Cetak(w http.ResponseWriter, r *http.Request) {
 		refs = append(refs, surat.PewarisRef{Nama: p.Nama, Status: p.Status})
 	}
 
+	// Anak = ahli waris selain istri/suami pewaris; hanya mereka yang dihitung
+	// pada frasa "dikaruniai N (...) orang anak".
+	anak := make([]ahliWarisView, 0, len(detail.AhliWaris))
+	for _, a := range detail.AhliWaris {
+		if pasanganStatus(a.Keterangan) == "" {
+			anak = append(anak, a)
+		}
+	}
+	frasaIstri, jumlahIstri := istriFrasa(detail)
+
 	data := cetakData{
-		B:               detail,
-		Peng:            pv,
-		Lurah:           h.pejabatAktif(r, "lurah"),
-		Camat:           h.pejabatAktif(r, "camat"),
-		PewarisFrasa:    surat.PewarisFrasa(refs),
-		JumlahAhliWaris: len(detail.AhliWaris),
-		Terbilang:       surat.Terbilang(len(detail.AhliWaris)),
-		TanggalID:       tglID,
-		TempatTanggal:   tempatTanggal(pv.Kota, tglID),
-		TanggalCetak:    formatTanggalID(time.Now().Format("2006-01-02")),
+		B:             detail,
+		Peng:          pv,
+		Lurah:         h.pejabatAktif(r, "lurah"),
+		Camat:         h.pejabatAktif(r, "camat"),
+		PewarisFrasa:  surat.PewarisFrasa(refs),
+		Anak:          anak,
+		JumlahAnak:    len(anak),
+		TerbilangAnak: surat.Terbilang(len(anak)),
+		MultiIstri:    jumlahIstri > 1,
+		IstriFrasa:    frasaIstri,
+		TanggalID:     tglID,
+		TempatTanggal: tempatTanggal(pv.Kota, tglID),
+		TanggalCetak:  formatTanggalID(time.Now().Format("2006-01-02")),
 	}
 
 	// Bagi ahli waris menjadi penerima & pemberi kuasa (untuk Surat Kuasa).
@@ -149,7 +207,11 @@ func (a ahliWarisView) JKStr() string {
 // TemplateFuncs adalah helper untuk parsing template di main.
 func TemplateFuncs() template.FuncMap {
 	return template.FuncMap{
-		"add":   func(a, b int) int { return a + b },
+		"add": func(a, b int) int { return a + b },
+		// html/template tak punya literal map; sub-template tabelAhli butuh 2 nilai.
+		"tabelAhliData": func(rows []ahliWarisView, multiIstri bool) map[string]any {
+			return map[string]any{"Rows": rows, "MultiIstri": multiIstri}
+		},
 		"tglID": formatTanggalID,
 		"gelar": surat.Gelar,
 		"statusLabel": func(s string) string {

@@ -33,6 +33,22 @@
     }
   }
 
+  // Kolom "Dari Istri" hanya ditampilkan bila memang terpakai (pewaris beristri >1).
+  $: adaDariIstri = !!berkas && berkas.ahli_waris.some((a) => (a.dari_istri || '').trim() !== '')
+
+  // Nama para istri, dari tiga sumber yang sama dengan yang dipakai saat mencetak.
+  $: namaIstri = !berkas ? [] : [
+    ...new Set([
+      ...berkas.pewaris.filter((p) => p.status === 'istri').map((p) => p.nama.trim()),
+      ...berkas.ahli_waris.filter((a) => a.keterangan === 'Istri').map((a) => a.nama.trim()),
+      ...berkas.ahli_waris.map((a) => (a.dari_istri || '').trim()),
+    ]),
+  ].filter(Boolean)
+
+  // Berkas lama bisa saja terlanjur menggabung 2 pewaris padahal istrinya lebih
+  // dari satu. Gabungan itu hanya sah bila ahli waris kedua pewaris sama persis.
+  $: pewarisGanda = !!berkas && berkas.pewaris.length > 1 && namaIstri.length > 1
+
   function syncPelengkap() {
     const pk = berkas.ahli_waris.find((a) => a.id === berkas.penerima_kuasa_ahli_waris_id)
     pelengkap = pk
@@ -125,6 +141,17 @@
     nomor register tidak berubah. Khusus bagian Surat Kuasa juga bisa diubah cepat di bawah.
   </p>
 
+  {#if pewarisGanda}
+    <div class="alert alert-warn">
+      <strong>Periksa lagi.</strong>
+      Berkas ini mencatat {berkas.pewaris.length} pewaris ({berkas.pewaris.map((p) => p.nama).join(', ')})
+      sekaligus {namaIstri.length} istri ({namaIstri.join(', ')}).
+      Ahli waris masing-masing pewaris tidak sama, sehingga surat ini dapat menyatakan seseorang
+      sebagai ahli waris dari pewaris yang bukan orang tuanya. Sebaiknya dibuat berkas terpisah
+      untuk tiap pewaris lewat tombol <strong>“Ubah Berkas”</strong>.
+    </div>
+  {/if}
+
   <!-- Surat yang dihasilkan -->
   <div class="card">
     <h3>Surat yang Dicetak dari Berkas Ini</h3>
@@ -178,13 +205,14 @@
     <h3>Ahli Waris</h3>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Nama</th><th>NIK</th><th>Umur</th><th>JK</th><th>Agama</th><th>Alamat</th><th>Hubungan</th></tr></thead>
+        <thead><tr><th>Nama</th><th>NIK</th><th>Umur</th><th>JK</th><th>Agama</th><th>Alamat</th><th>Hubungan</th>{#if adaDariIstri}<th>Dari Istri</th>{/if}</tr></thead>
         <tbody>
           {#each berkas.ahli_waris as a}
             <tr>
               <td>{a.nama}{#if a.id === berkas.penerima_kuasa_ahli_waris_id}&nbsp;<span class="badge badge-blue">Penerima Kuasa</span>{/if}</td>
               <td class="mono">{a.nik}</td><td>{a.umur ?? '-'}</td><td>{jk(a.jenis_kelamin)}</td>
               <td>{a.agama || '-'}</td><td>{a.alamat || '-'}</td><td>{a.keterangan || '-'}</td>
+              {#if adaDariIstri}<td>{a.dari_istri || '-'}</td>{/if}
             </tr>
           {/each}
         </tbody>

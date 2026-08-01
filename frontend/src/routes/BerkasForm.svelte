@@ -7,6 +7,7 @@
   import ConfirmDialog from '../lib/ConfirmDialog.svelte'
 
   const AGAMA = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Khonghucu']
+  const HUBUNGAN = ['Anak', 'Istri', 'Suami', 'Ayah', 'Ibu', 'Saudara Kandung', 'Cucu']
 
   export let id = null // terisi → mode edit (revisi berkas yang sudah ada)
 
@@ -49,6 +50,7 @@
     ahli_waris = b.ahli_waris.map((a) => ({
       nama: a.nama, nik: a.nik, umur: a.umur ?? '', jenis_kelamin: a.jenis_kelamin || 'L',
       agama: a.agama || '', alamat: a.alamat || '', keterangan: a.keterangan || '',
+      hub_pilih: hubPilih(a.keterangan || ''), dari_istri: a.dari_istri || '', di_pilih: a.dari_istri || '',
       tempat_lahir: a.tempat_lahir || '', tgl_lahir: a.tgl_lahir || '', pekerjaan: a.pekerjaan || '',
     }))
     saksi = b.saksi.map((s) => ({
@@ -59,6 +61,7 @@
     kuasa = b.kuasa.length ? b.kuasa.map((k) => k.deskripsi) : ['']
     const pkIdx = b.ahli_waris.findIndex((a) => a.id === b.penerima_kuasa_ahli_waris_id)
     penerima_kuasa_index = pkIdx >= 0 ? pkIdx : null
+    multiNikah = b.ahli_waris.some((a) => (a.dari_istri || '').trim() !== '')
   }
   $: siap = syarat.length > 0 && syarat.every((s) => s.ok)
 
@@ -88,8 +91,60 @@
     return { nama: '', nik: '', status, tgl_meninggal: '', instansi_kematian: '', no_surat_kematian: '', tgl_surat_kematian: '' }
   }
   function emptyAhli() {
-    return { nama: '', nik: '', umur: '', jenis_kelamin: 'L', agama: '', alamat: '', keterangan: '', tempat_lahir: '', tgl_lahir: '', pekerjaan: '' }
+    return { nama: '', nik: '', umur: '', jenis_kelamin: 'L', agama: '', alamat: '', keterangan: 'Anak', hub_pilih: 'Anak', dari_istri: '', di_pilih: '', tempat_lahir: '', tgl_lahir: '', pekerjaan: '' }
   }
+
+  // hub_pilih = nilai dropdown Hubungan; nilai di luar daftar (mis. data berkas
+  // lama) jatuh ke "Lainnya" agar tetap bisa dilihat & diubah.
+  function hubPilih(k) {
+    if (k === '' || HUBUNGAN.includes(k)) return k
+    return 'Lainnya'
+  }
+  function pilihHubungan(i) {
+    const a = ahli_waris[i]
+    if (a.hub_pilih !== 'Lainnya') a.keterangan = a.hub_pilih
+    else if (HUBUNGAN.includes(a.keterangan)) a.keterangan = ''
+    ahli_waris = ahli_waris
+  }
+
+  // Sama polanya dengan Hubungan: pilih dari daftar, atau "Lainnya" untuk nama
+  // yang belum ada di daftar (istri yang meninggal lebih dulu). Sekali diketik,
+  // nama itu ikut jadi pilihan di baris ahli waris berikutnya.
+  function pilihDariIstri(i) {
+    const a = ahli_waris[i]
+    if (a.di_pilih !== 'Lainnya') a.dari_istri = a.di_pilih
+    else if (namaIstri.includes(a.dari_istri)) a.dari_istri = ''
+    ahli_waris = ahli_waris
+  }
+
+  // Nama para istri pewaris: yang sudah meninggal ada di daftar Pewaris, yang
+  // masih hidup ada di daftar Ahli Waris. Dipakai untuk pilihan "Dari Istri",
+  // yang hanya relevan bila istrinya lebih dari satu.
+  $: namaIstri = [
+    ...new Set([
+      ...pewaris.filter((p) => p.status === 'istri').map((p) => p.nama.trim()),
+      ...ahli_waris.filter((a) => a.keterangan === 'Istri').map((a) => a.nama.trim()),
+      ...ahli_waris.map((a) => (a.dari_istri || '').trim()),
+    ]),
+  ].filter(Boolean)
+
+  // Isian "Dari Istri" tampil bila sudah kelihatan ada lebih dari satu istri,
+  // atau bila petugas mencentang sendiri. Centang itu perlu untuk kasus istri
+  // yang meninggal lebih dulu: dia bukan pewaris berkas ini dan bukan pula ahli
+  // waris, jadi namanya tidak akan pernah terdeteksi otomatis.
+  let multiNikah = false
+  $: tampilDariIstri = multiNikah || namaIstri.length > 1
+
+  // Menggabungkan 2 pewaris dalam 1 surat hanya sah bila daftar ahli waris
+  // keduanya sama persis. Begitu istrinya lebih dari satu, tidak lagi sama:
+  // ahli waris suami mencakup anak dari kedua istri, ahli waris seorang istri
+  // hanya anak-anaknya sendiri. Peringatan saja, tidak memblokir.
+  $: peringatanPewaris =
+    pewaris.length > 1 && namaIstri.length > 1
+      ? `Berkas ini mencatat 2 pewaris (${pewaris.map((p) => p.nama.trim() || '-').join(', ')}) sekaligus ${namaIstri.length} istri. ` +
+        'Ahli waris kedua pewaris tidak sama, jadi sebaiknya dibuat berkas terpisah untuk masing-masing pewaris. ' +
+        'Anda tetap dapat menyimpan bila memang sudah yakin.'
+      : ''
   function emptySaksi() {
     return { nama: '', tempat_lahir: '', tgl_lahir: '', alamat: '', nik: '', hubungan: '' }
   }
@@ -122,8 +177,8 @@
       { nama: 'SARITISA TAFONAO', nik: randNik(), status: 'istri', tgl_meninggal: '2024-02-10', instansi_kematian: '', no_surat_kematian: '1472-KM-9', tgl_surat_kematian: '2024-02-15' },
     ]
     ahli_waris = [
-      { nama: 'ANGERAGO TAFONAO', nik: randNik(), umur: 31, jenis_kelamin: 'L', agama: 'Kristen', alamat: 'Jl. Sabar Menanti', keterangan: 'Anak', tempat_lahir: 'Doli-doli', tgl_lahir: '1994-12-08', pekerjaan: 'Pelajar/Mahasiswa' },
-      { nama: 'ELViNA TAFONAO', nik: randNik(), umur: 27, jenis_kelamin: 'P', agama: 'Kristen', alamat: 'Jl. Sabar Menanti', keterangan: 'Anak', tempat_lahir: '', tgl_lahir: '', pekerjaan: '' },
+      { nama: 'ANGERAGO TAFONAO', nik: randNik(), umur: 31, jenis_kelamin: 'L', agama: 'Kristen', alamat: 'Jl. Sabar Menanti', keterangan: 'Anak', hub_pilih: 'Anak', dari_istri: '', di_pilih: '', tempat_lahir: 'Doli-doli', tgl_lahir: '1994-12-08', pekerjaan: 'Pelajar/Mahasiswa' },
+      { nama: 'ELViNA TAFONAO', nik: randNik(), umur: 27, jenis_kelamin: 'P', agama: 'Kristen', alamat: 'Jl. Sabar Menanti', keterangan: 'Anak', hub_pilih: 'Anak', dari_istri: '', di_pilih: '', tempat_lahir: '', tgl_lahir: '', pekerjaan: '' },
     ]
     saksi = [
       { nama: 'Rahmat Hidayat', tempat_lahir: 'Bogor', tgl_lahir: '1970-05-12', alamat: 'Jl. Anggrek 3', nik: randNik(), hubungan: 'Tetangga' },
@@ -152,6 +207,7 @@
           nama: a.nama, nik: a.nik,
           umur: a.umur === '' || a.umur === null ? null : Number(a.umur),
           jenis_kelamin: a.jenis_kelamin, agama: a.agama, alamat: a.alamat, keterangan: a.keterangan,
+          dari_istri: tampilDariIstri ? a.dari_istri : '',
           tempat_lahir: a.tempat_lahir, tgl_lahir: a.tgl_lahir, pekerjaan: a.pekerjaan,
         })),
         saksi: saksi.map((s) => ({ ...s })),
@@ -306,6 +362,13 @@
     <div class="card">
       <h2>Langkah 3: Ahli Waris</h2>
       <div class="section-sub">Semua penerima waris, sesuai urutan yang akan tercetak di surat.</div>
+      <label class="cek-multinikah">
+        <input type="checkbox" bind:checked={multiNikah} />
+        <span>
+          Pewaris menikah lebih dari satu kali
+          <small>Centang bila almarhum/ah punya lebih dari satu istri atau suami, termasuk yang sudah meninggal lebih dulu. Isian “Dari Istri” akan muncul di tiap ahli waris.</small>
+        </span>
+      </label>
       {#each ahli_waris as a, i}
         <div class="item-card">
           <div class="item-head">
@@ -330,8 +393,37 @@
           </div>
           <div class="row row-2">
             <div class="field"><label>Alamat</label><input bind:value={a.alamat} /></div>
-            <div class="field"><label>Hubungan dengan Pewaris</label><input bind:value={a.keterangan} placeholder="contoh: Anak" /></div>
+            <div class="field"><label>Hubungan dengan Pewaris</label>
+              <select bind:value={a.hub_pilih} on:change={() => pilihHubungan(i)}>
+                <option value="">- Pilih -</option>
+                {#each HUBUNGAN as h}<option value={h}>{h}</option>{/each}
+                <option value="Lainnya">Lainnya (ketik sendiri)</option>
+              </select>
+            </div>
           </div>
+          {#if a.hub_pilih === 'Lainnya' || tampilDariIstri}
+            <div class="row row-2">
+              {#if a.hub_pilih === 'Lainnya'}
+                <div class="field"><label>Hubungan (ketik sendiri)</label><input bind:value={a.keterangan} placeholder="contoh: Keponakan" /></div>
+              {/if}
+              {#if tampilDariIstri && a.keterangan !== 'Istri' && a.keterangan !== 'Suami'}
+                <div class="field"><label>Dari Istri</label>
+                  <select bind:value={a.di_pilih} on:change={() => pilihDariIstri(i)}>
+                    <option value="">- Tidak diisi -</option>
+                    {#each namaIstri as n}<option value={n}>{n}</option>{/each}
+                    <option value="Lainnya">Lainnya (ketik sendiri)</option>
+                  </select>
+                  {#if a.di_pilih === 'Lainnya'}
+                    <!-- on:change, bukan bind: nama baru baru masuk daftar pilihan
+                         setelah selesai diketik, bukan huruf demi huruf. -->
+                    <input class="ketik-lain" value={a.dari_istri} placeholder="nama istri, contoh: HALIMAH"
+                      on:change={(e) => { a.dari_istri = e.target.value.trim(); ahli_waris = ahli_waris }} />
+                  {/if}
+                  <div class="help">Ibu kandung ahli waris ini. Pilih "Lainnya" bila istri tersebut sudah meninggal lebih dulu sehingga belum ada di daftar. Nama yang sudah diketik otomatis jadi pilihan untuk ahli waris berikutnya.</div>
+                </div>
+              {/if}
+            </div>
+          {/if}
         </div>
       {/each}
       <button type="button" class="btn" on:click={addAhli}>+ Tambah Ahli Waris</button>
@@ -449,7 +541,7 @@
       <div class="rv-value">
         {#each ahli_waris as a, i}
           <div>
-            {i + 1}. {a.nama || '-'}{a.keterangan ? ` (${a.keterangan})` : ''}
+            {i + 1}. {a.nama || '-'}{a.keterangan ? ` (${a.keterangan})` : ''}{namaIstri.length > 1 && a.dari_istri ? ` dari ${a.dari_istri}` : ''}
             {#if penerima_kuasa_index === i}&nbsp;<span class="badge badge-blue">Penerima Kuasa</span>{/if}
           </div>
         {/each}
@@ -476,6 +568,12 @@
       <button type="button" class="btn btn-sm" on:click={() => goTo(5)}>Ubah</button>
     </div>
   </div>
+
+  {#if peringatanPewaris}
+    <div class="alert alert-warn">
+      <strong>Periksa lagi.</strong> {peringatanPewaris}
+    </div>
+  {/if}
 
   <div class="wiz-actions">
     <button type="button" class="btn btn-lg" on:click={back}>← Kembali</button>

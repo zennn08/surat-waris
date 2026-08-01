@@ -79,6 +79,7 @@ CREATE TABLE IF NOT EXISTS ahli_waris (
     agama         TEXT,
     alamat        TEXT,
     keterangan    TEXT,           -- "Anak" | "Istri" | dll
+    dari_istri    TEXT,           -- nama ibu; dipakai bila pewaris beristri >1
     -- field tambahan, hanya wajib bila jadi penerima kuasa (Surat 2):
     tempat_lahir  TEXT,
     tgl_lahir     TEXT,

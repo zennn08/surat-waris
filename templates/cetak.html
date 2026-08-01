@@ -58,6 +58,16 @@
   .strong-name { font-weight: bold; text-decoration: underline; }
   .rk { text-align: right; margin: 8pt 0; }
 
+  /* Kotak tempel materai; satu kotak per surat, di kolom tanda tangan ahli
+     waris. float:right agar kotak berdampingan dengan deretan nama (bukan
+     menumpuk di atasnya). Kolom .ttd2 .col adalah flex item = sudah jadi
+     blok pembatas, jadi float ini tidak bocor ke bawah garis. */
+  .materai {
+    float: right; border: 1px solid #000; width: 2.2cm; height: 1.5cm;
+    text-align: center; font-size: 6.5pt; line-height: 1.25; padding-top: .4cm;
+    margin: 2pt 0 4pt 8pt;
+  }
+
   .garis { border-top: 3px double #000; margin: 8pt 0 5pt; }
 
   /* blok pejabat */
@@ -76,6 +86,10 @@
     position: absolute; left: 0; right: 0; text-align: center;
     font-family: 'Segoe UI', Arial, sans-serif; font-size: 6pt; line-height: 1; color: #777;
   }
+  /* Penahan tinggi footer di akhir aliran konten. Saat surat meluber ke lembar
+     kedua, dasar kotak .surat = akhir konten, dan footer absolut tadi menimpa
+     baris NIP. Penahan ini menyisakan ruangnya. */
+  .sysfooter-space { height: 14pt; }
 
   @media screen {
     body { padding: 60px 0 40px; }
@@ -90,8 +104,12 @@
     .surat { width: auto; min-height: 25.2cm; padding: 0; margin: 0; page-break-after: always; }
     .surat:last-child { page-break-after: auto; }
     .sysfooter { bottom: 0; }
-    /* bila data sangat banyak dan surat terpaksa meluber, pecah di tempat rapi */
-    table.tbl tr, .ttd2, .pejabat2, .pejabat1 { page-break-inside: avoid; }
+    /* Bila data banyak dan surat meluber ke lembar kedua, blok tanda tangan
+       harus pindah UTUH, tidak boleh terbelah di tengah kolom. */
+    table.tbl tr, .ttd2, .pejabat2, .pejabat1,
+    .ttd-blok, table.saksi2, table.data, .signrow {
+      page-break-inside: avoid; break-inside: avoid;
+    }
   }
 </style>
 </head>
@@ -99,7 +117,7 @@
 <div class="toolbar">
   <button class="print" onclick="window.print()">Cetak / Simpan PDF</button>
   <button onclick="window.close()">Tutup</button>
-  <span class="muted">A4 · Times New Roman · 3 surat = 3 halaman</span>
+  <span class="muted">A4 · Times New Roman · 3 surat, masing-masing mulai di halaman baru</span>
 </div>
 
 {{/* ============ SURAT 1: KETERANGAN AHLI WARIS ============ */}}
@@ -109,9 +127,13 @@
   <div class="isi">
     <p>Yang bertanda tangan dibawah ini, ahli waris dari {{.PewarisFrasa}} sanggup diangkat sumpah, bahwa {{.PewarisFrasa}} tempat tinggal terakhir di {{.B.TempatTinggalPewaris}} Kelurahan {{.Peng.NamaKelurahan}} Kecamatan {{.Peng.Kecamatan}}, {{range $i, $p := .B.Pewaris}}{{if $i}} dan {{end}}{{gelar $p.Status}} {{$p.Nama}} ({{statusLabel $p.Status}}) meninggal dunia tepatnya pada tanggal {{tglID $p.TglMeninggal}} sesuai dengan Surat Kematian yang dikeluarkan oleh {{$p.InstansiKematian}} Nomor : {{$p.NoSuratKematian}} Tanggal {{tglID $p.TglSuratKematian}}.{{end}}</p>
 
-    <p>Dari perkawinan {{.PewarisFrasa}}, dikaruniai {{.JumlahAhliWaris}} ({{.Terbilang}}) orang anak yaitu, dengan susunan anggota keluarga yaitu&nbsp;:</p>
+    {{if .MultiIstri}}
+    <p>Semasa hidupnya {{.PewarisFrasa}} telah menikah dengan {{.IstriFrasa}}, dari perkawinan tersebut dikaruniai {{.JumlahAnak}} ({{.TerbilangAnak}}) orang anak, dengan susunan anggota keluarga yaitu&nbsp;:</p>
+    {{else}}
+    <p>Dari perkawinan {{.PewarisFrasa}}, dikaruniai {{.JumlahAnak}} ({{.TerbilangAnak}}) orang anak yaitu, dengan susunan anggota keluarga yaitu&nbsp;:</p>
+    {{end}}
 
-    {{template "tabelAhli" .B.AhliWaris}}
+    {{template "tabelAhli" (tabelAhliData .B.AhliWaris .MultiIstri)}}
 
     <p>Selain dari nama-nama diatas, tidak ada ahli waris lain dari {{.PewarisFrasa}}, berdasarkan Surat Pernyataan Ahli Waris {{.TanggalID}}.</p>
 
@@ -122,27 +144,29 @@
     <p>Demikian Surat Keterangan ini kami buat dan apabila dikemudian hari ternyata keterangan kami ini tidak benar, maka Surat Keterangan ini dapat dijadikan dasar penuntutan hukum baik secara Pidana maupun Perdata berdasarkan Peraturan Perundang-undangan yang berlaku di Negara Republik Indonesia tanpa melibatkan unsur pemerintah dan atau pihak lainnya.</p>
   </div>
 
-  <div class="ttd2">
-    <div class="col">
-      <div>Kami para Saksi-saksi :</div>
-      <div class="sp"></div>
-      {{range $i, $s := .B.Saksi}}<div class="signrow">{{add $i 1}}. {{$s.Nama}}</div>{{end}}
+  <div class="ttd-blok">
+    <div class="ttd2">
+      <div class="col">
+        <div>Kami para Saksi-saksi :</div>
+        <div class="sp"></div>
+        {{range $i, $s := .B.Saksi}}<div class="signrow">{{add $i 1}}. {{$s.Nama}}</div>{{end}}
+      </div>
+      <div class="col right">
+        <div>{{.TempatTanggal}}</div>
+        <div>Kami Para Ahli Waris,</div>
+        <div class="materai">MATERAI<br>Rp10.000,-</div>
+        {{range $i, $a := .B.AhliWaris}}<div class="signrow">{{add $i 1}}. {{$a.Nama}}</div>{{end}}
+      </div>
     </div>
-    <div class="col right">
-      <div>{{.TempatTanggal}}</div>
-      <div>Kami Para Ahli Waris,</div>
-      <div class="sp"></div>
-      {{range $i, $a := .B.AhliWaris}}<div class="signrow">{{add $i 1}}. {{$a.Nama}}</div>{{end}}
+
+    <div class="garis"></div>
+
+    <div class="isi">
+      <p>Diketahui oleh Camat {{.Peng.Kecamatan}} dan Lurah {{.Peng.NamaKelurahan}} berdasarkan Peraturan Menteri Negara Agraria Kepala BPN Nomor : 03 Tahun 1997 Bagian Kelima Pasal 111 Angka (1) Huruf C.</p>
     </div>
+
+    {{template "pejabatDua" .}}
   </div>
-
-  <div class="garis"></div>
-
-  <div class="isi">
-    <p>Diketahui oleh Camat {{.Peng.Kecamatan}} dan Lurah {{.Peng.NamaKelurahan}} berdasarkan Peraturan Menteri Negara Agraria Kepala BPN Nomor : 03 Tahun 1997 Bagian Kelima Pasal 111 Angka (1) Huruf C.</p>
-  </div>
-
-  {{template "pejabatDua" .}}
   {{template "sysfooter" .}}
 </section>
 
@@ -153,7 +177,7 @@
   <div class="isi">
     <p>Kami yang bertanda tangan dibawah ini adalah Ahli Waris {{.PewarisFrasa}}, bersama ini menerangkan dengan sesungguhnya tanpa ada paksaan dari pihak manapun dan sanggup diangkat sumpahnya {{.PewarisFrasa}}, bertempat tinggal terakhir di {{.B.TempatTinggalPewaris}}, Kelurahan {{.Peng.NamaKelurahan}} Kecamatan {{.Peng.Kecamatan}}, dengan data penerima kuasa sebagai berikut&nbsp;:</p>
 
-    {{template "tabelAhli" .PemberiKuasa}}
+    {{template "tabelAhli" (tabelAhliData .PemberiKuasa .MultiIstri)}}
 
     <p>Pihak Pertama Penerima Kuasa kepada&nbsp;:</p>
     {{with .PenerimaKuasa}}
@@ -185,32 +209,36 @@
     {{template "saksiDua" .B.Saksi}}
 
     <p>Demikian Surat Kuasa ini kami buat dan ditandatangani oleh masing-masing pihak dihadapan 2 (dua) orang saksi.</p>
-
-    <div class="rk">
-      <div>Dibuat di&nbsp;&nbsp;&nbsp;&nbsp;: {{.Peng.Kota}}</div>
-      <div>Pada tanggal : {{.TanggalID}}</div>
-    </div>
-
-    <p style="margin:2pt 0;">Kami para Saksi :</p>
-    {{range $i, $s := .B.Saksi}}<div>{{add $i 1}}. {{$s.Nama}}</div>{{end}}
   </div>
 
-  <div class="ttd2">
-    <div class="col">
-      <div>Yang Menerima Kuasa,</div>
-      <div>PIHAK I</div>
-      <div class="sp-lg"></div>
-      {{with .PenerimaKuasa}}<div class="strong-name">{{.Nama}}</div>{{else}}<div>(………………………)</div>{{end}}
-    </div>
-    <div class="col right">
-      <div>Yang Memberi Kuasa,</div>
-      <div>PIHAK II</div>
-      <div class="sp"></div>
-      {{range $i, $p := .PemberiKuasa}}<div class="signrow">{{add $i 1}}. {{$p.Nama}}</div>{{else}}<div>(………………………)</div>{{end}}
-    </div>
-  </div>
+  <div class="ttd-blok">
+    <div class="isi">
+      <div class="rk">
+        <div>Dibuat di&nbsp;&nbsp;&nbsp;&nbsp;: {{.Peng.Kota}}</div>
+        <div>Pada tanggal : {{.TanggalID}}</div>
+      </div>
 
-  {{template "pejabatDua" .}}
+      <p style="margin:2pt 0;">Kami para Saksi :</p>
+      {{range $i, $s := .B.Saksi}}<div>{{add $i 1}}. {{$s.Nama}}</div>{{end}}
+    </div>
+
+    <div class="ttd2">
+      <div class="col">
+        <div>Yang Menerima Kuasa,</div>
+        <div>PIHAK I</div>
+        <div class="sp-lg"></div>
+        {{with .PenerimaKuasa}}<div class="strong-name">{{.Nama}}</div>{{else}}<div>(………………………)</div>{{end}}
+      </div>
+      <div class="col right">
+        <div>Yang Memberi Kuasa,</div>
+        <div>PIHAK II</div>
+        <div class="materai">MATERAI<br>Rp10.000,-</div>
+        {{range $i, $p := .PemberiKuasa}}<div class="signrow">{{add $i 1}}. {{$p.Nama}}</div>{{else}}<div>(………………………)</div>{{end}}
+      </div>
+    </div>
+
+    {{template "pejabatDua" .}}
+  </div>
   {{template "sysfooter" .}}
 </section>
 
@@ -221,12 +249,16 @@
   <div class="isi">
     <p>Saya yang bertanda tangan dibawah ini&nbsp;:</p>
 
-    {{template "tabelAhli" .B.AhliWaris}}
+    {{template "tabelAhli" (tabelAhliData .B.AhliWaris .MultiIstri)}}
 
-    <p>Dengan ini menyatakan bahwa memang benar dari {{.PewarisFrasa}}, dikaruniai {{.JumlahAhliWaris}} ({{.Terbilang}}) orang anak yaitu&nbsp;:</p>
+    {{if .MultiIstri}}
+    <p>Dengan ini menyatakan bahwa memang benar {{.PewarisFrasa}} telah menikah dengan {{.IstriFrasa}}, dan dari perkawinan tersebut dikaruniai {{.JumlahAnak}} ({{.TerbilangAnak}}) orang anak yaitu&nbsp;:</p>
+    {{else}}
+    <p>Dengan ini menyatakan bahwa memang benar dari {{.PewarisFrasa}}, dikaruniai {{.JumlahAnak}} ({{.TerbilangAnak}}) orang anak yaitu&nbsp;:</p>
+    {{end}}
 
     <ol class="nama">
-      {{range .B.AhliWaris}}<li>{{.Nama}}</li>{{end}}
+      {{range .Anak}}<li>{{.Nama}}{{if $.MultiIstri}}{{if .DariIstri}} (dari {{.DariIstri}}){{end}}{{end}}</li>{{end}}
     </ol>
 
     <p>Selain dari Ahli Waris tersebut, tidak ada lagi Ahli Waris yang lain dari {{.PewarisFrasa}}.</p>
@@ -234,21 +266,23 @@
     <p>Demikian Surat Pernyataan ini kami buat dan apabila dikemudian hari ternyata keterangan kami ini tidak benar, maka Surat Pernyataan ini dapat dijadikan dasar penuntutan hukum baik secara Pidana maupun Perdata berdasarkan Peraturan Perundang-undangan yang berlaku di Negara Republik Indonesia tanpa melibatkan unsur pemerintah dan atau pihak lainnya.</p>
   </div>
 
-  <div class="ttd2">
-    <div class="col">
-      <div>Kami para Saksi-saksi :</div>
-      <div class="sp"></div>
-      {{range $i, $s := .B.Saksi}}<div class="signrow">{{add $i 1}}. {{$s.Nama}}</div>{{end}}
+  <div class="ttd-blok">
+    <div class="ttd2">
+      <div class="col">
+        <div>Kami para Saksi-saksi :</div>
+        <div class="sp"></div>
+        {{range $i, $s := .B.Saksi}}<div class="signrow">{{add $i 1}}. {{$s.Nama}}</div>{{end}}
+      </div>
+      <div class="col right">
+        <div>{{.TempatTanggal}}</div>
+        <div>Kami Para Ahli Waris,</div>
+        <div class="materai">MATERAI<br>Rp10.000,-</div>
+        {{range $i, $a := .B.AhliWaris}}<div class="signrow">{{add $i 1}}. {{$a.Nama}}</div>{{end}}
+      </div>
     </div>
-    <div class="col right">
-      <div>{{.TempatTanggal}}</div>
-      <div>Kami Para Ahli Waris,</div>
-      <div class="sp"></div>
-      {{range $i, $a := .B.AhliWaris}}<div class="signrow">{{add $i 1}}. {{$a.Nama}}</div>{{end}}
-    </div>
-  </div>
 
-  {{template "pejabatLurah" .}}
+    {{template "pejabatLurah" .}}
+  </div>
   {{template "sysfooter" .}}
 </section>
 </body>
@@ -257,13 +291,16 @@
 
 {{/* ==================== SUB-TEMPLATES ==================== */}}
 
+{{/* tabelAhli: kolom "Dari Istri" hanya muncul bila pewaris beristri >1,
+     sehingga berkas dengan satu istri tercetak sama persis seperti sebelumnya. */}}
 {{define "tabelAhli"}}
+{{$multi := .MultiIstri}}
 <table class="tbl">
   <thead>
-    <tr><th>No</th><th>N a m a</th><th>No. Identitas/NIK</th><th>Umur</th><th>L/P</th><th>Agama</th><th>Alamat</th><th>Ket</th></tr>
+    <tr><th>No</th><th>N a m a</th><th>No. Identitas/NIK</th><th>Umur</th><th>L/P</th><th>Agama</th><th>Alamat</th><th>Ket</th>{{if $multi}}<th>Dari Istri</th>{{end}}</tr>
   </thead>
   <tbody>
-    {{range $i, $a := .}}
+    {{range $i, $a := .Rows}}
     <tr>
       <td class="c">{{add $i 1}}.</td>
       <td>{{$a.Nama}}</td>
@@ -273,9 +310,10 @@
       <td>{{$a.Agama}}</td>
       <td>{{$a.Alamat}}</td>
       <td>{{$a.Keterangan}}</td>
+      {{if $multi}}<td>{{if $a.DariIstri}}{{$a.DariIstri}}{{else}}-{{end}}</td>{{end}}
     </tr>
     {{else}}
-    <tr><td colspan="8" class="c"><em>[Tidak ada data]</em></td></tr>
+    <tr><td colspan="{{if $multi}}9{{else}}8{{end}}" class="c"><em>[Tidak ada data]</em></td></tr>
     {{end}}
   </tbody>
 </table>
@@ -348,6 +386,7 @@
 {{end}}
 
 {{define "sysfooter"}}
+<div class="sysfooter-space"></div>
 <div class="sysfooter">Dicetak melalui aplikasi SIWARIS, Reg. No. {{.B.RegNoLurah}}, tanggal cetak {{.TanggalCetak}}</div>
 {{end}}
 

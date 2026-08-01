@@ -3,7 +3,7 @@
 **SIWARIS (Sistem Informasi Surat Ahli Waris)** membantu petugas kelurahan membuat
 berkas surat waris: cukup mengisi data satu kali, aplikasi menerbitkan nomor
 registrasi dan mencetak **3 surat sekaligus** (Surat Keterangan, Surat Kuasa, dan
-Surat Pernyataan Ahli Waris) dalam 3 halaman A4.
+Surat Pernyataan Ahli Waris) di kertas A4, tiap surat mulai di halaman baru.
 
 > Contoh pada panduan ini memakai Kelurahan **Jaya Mukti (JM)**, Kecamatan
 > **Dumai Timur (DT)**, Kota Dumai.
@@ -16,14 +16,15 @@ Surat Pernyataan Ahli Waris) dalam 3 halaman A4.
 2. [Login Pertama Kali](#2-login-pertama-kali)
 3. [Persiapan Awal (Wajib, Sekali Saja)](#3-persiapan-awal-wajib-sekali-saja)
 4. [Membuat Berkas Waris](#4-membuat-berkas-waris)
-5. [Melihat Detail & Merevisi Berkas](#5-melihat-detail--merevisi-berkas)
-6. [Mencetak / Menyimpan PDF](#6-mencetak--menyimpan-pdf)
-7. [Mencari Berkas & Ekspor ke Excel](#7-mencari-berkas--ekspor-ke-excel)
-8. [Melanjutkan Nomor dari Pembukuan Manual](#8-melanjutkan-nomor-dari-pembukuan-manual)
-9. [Cadangan & Pindah Data (Pindah Komputer)](#9-cadangan--pindah-data-pindah-komputer)
-10. [Pembaruan Aplikasi Otomatis](#10-pembaruan-aplikasi-otomatis)
-11. [Mengganti Password](#11-mengganti-password)
-12. [Pertanyaan yang Sering Muncul](#12-pertanyaan-yang-sering-muncul)
+5. [Satu Berkas untuk Siapa? (Pewaris, Istri Lebih dari Satu)](#5-satu-berkas-untuk-siapa-pewaris-istri-lebih-dari-satu)
+6. [Melihat Detail & Merevisi Berkas](#6-melihat-detail--merevisi-berkas)
+7. [Mencetak / Menyimpan PDF](#7-mencetak--menyimpan-pdf)
+8. [Mencari Berkas & Ekspor ke Excel](#8-mencari-berkas--ekspor-ke-excel)
+9. [Melanjutkan Nomor dari Pembukuan Manual](#9-melanjutkan-nomor-dari-pembukuan-manual)
+10. [Cadangan & Pindah Data (Pindah Komputer)](#10-cadangan--pindah-data-pindah-komputer)
+11. [Pembaruan Aplikasi Otomatis](#11-pembaruan-aplikasi-otomatis)
+12. [Mengganti Password](#12-mengganti-password)
+13. [Pertanyaan yang Sering Muncul](#13-pertanyaan-yang-sering-muncul)
 
 ---
 
@@ -34,7 +35,7 @@ Surat Pernyataan Ahli Waris) dalam 3 halaman A4.
 2. Browser terbuka otomatis ke alamat aplikasi (biasanya `http://localhost:8080`).
 3. Seluruh data tersimpan di file `surat-waris.db` **di folder yang sama dengan
    exe** dan tidak butuh internet. Untuk backup atau pindah komputer, pakai
-   fitur bawaan di [bagian 9](#9-cadangan--pindah-data-pindah-komputer).
+   fitur bawaan di [bagian 10](#10-cadangan--pindah-data-pindah-komputer).
 
 ## 2. Login Pertama Kali
 
@@ -123,13 +124,40 @@ instansi dari Pengaturan.
 ### Langkah 3: Ahli Waris
 
 Semua penerima waris, sesuai urutan yang akan tercetak di tabel surat.
-Klik **+ Tambah Ahli Waris** sesuai jumlahnya. Kolom *Hubungan dengan
-Pewaris* diisi misalnya `Anak`.
+Klik **+ Tambah Ahli Waris** sesuai jumlahnya.
+
+*Hubungan dengan Pewaris* dipilih dari daftar: **Anak, Istri, Suami, Ayah, Ibu,
+Saudara Kandung, Cucu**. Bila hubungannya tidak ada di daftar, pilih
+**Lainnya (ketik sendiri)** lalu ketik sendiri, misalnya `Keponakan`.
+
+> **Pasangan yang masih hidup ikut di sini.** Istri atau suami yang belum
+> meninggal adalah **ahli waris**, bukan pewaris. Isi namanya sebagai ahli waris
+> dengan Hubungan `Istri` atau `Suami`. Dia ikut tabel dan ikut menandatangani
+> surat, tetapi tidak dihitung pada kalimat "dikaruniai sekian orang anak".
+
+**Bila pewaris menikah lebih dari satu kali**, centang kotak
+**"Pewaris menikah lebih dari satu kali"** di atas daftar. Setiap ahli waris
+akan mendapat isian **Dari Istri**, yaitu ibu kandungnya. Pilih dari daftar
+nama istri yang sudah diketik; kalau istri tersebut sudah meninggal lebih dulu
+sehingga belum ada di daftar, pilih **Lainnya (ketik sendiri)** lalu ketik
+namanya. Nama yang sudah diketik langsung ikut jadi pilihan untuk ahli waris
+berikutnya, jadi cukup sekali mengetik.
+
+Kalau *Dari Istri* terisi untuk dua istri yang berbeda, surat otomatis
+menambah kolom **Dari Istri** pada tabel dan kalimatnya berubah menjadi
+*"Semasa hidupnya Almarhum ... telah menikah dengan A dan B, dari perkawinan
+tersebut dikaruniai sekian orang anak"*. Bila hanya satu istri, surat tercetak
+seperti biasa tanpa kolom tambahan.
 
 > **Perhatian:** NIK pewaris hanya bisa dibuatkan berkas **satu kali**.
 > Ini pengaman agar tidak ada surat waris ganda.
 
 ![Langkah 3](img/10-langkah3-ahli-waris.png)
+
+Tampilan setelah centang "Pewaris menikah lebih dari satu kali" diaktifkan dan
+*Dari Istri* terisi:
+
+![Langkah 3 dengan Dari Istri](img/19-langkah3-dari-istri.png)
 
 ### Langkah 4: Saksi
 
@@ -154,6 +182,14 @@ langkah terkait.
 
 ![Langkah 6](img/13-langkah6-periksa.png)
 
+Bila berkas mencatat **2 pewaris sekaligus lebih dari satu istri**, muncul
+kotak peringatan kuning. Berkas seperti itu sebaiknya dipisah; penjelasannya
+ada di [bagian 5](#5-satu-berkas-untuk-siapa-pewaris-istri-lebih-dari-satu).
+Peringatan ini tidak menghalangi, berkas tetap bisa disimpan bila petugas
+sudah yakin.
+
+![Peringatan pewaris ganda](img/20-peringatan-pewaris-ganda.png)
+
 Saat klik **Simpan Berkas**, muncul jendela konfirmasi; klik **Ya, Simpan**
 dan nomor registrasi Kelurahan langsung terbit. Tidak perlu khawatir salah
 ketik: **semua data masih bisa direvisi** kapan saja lewat tombol
@@ -161,12 +197,70 @@ ketik: **semua data masih bisa direvisi** kapan saja lewat tombol
 
 ![Konfirmasi simpan](img/18-konfirmasi-simpan.png)
 
-## 5. Melihat Detail & Merevisi Berkas
+## 5. Satu Berkas untuk Siapa? (Pewaris, Istri Lebih dari Satu)
+
+Bagian ini menentukan **isi** surat, bukan cara menekan tombol. Sebaiknya
+dibaca sekali sebelum mulai melayani.
+
+**Warisan terbuka per orang yang meninggal.** Setiap almarhum/almarhumah punya
+daftar ahli warisnya sendiri. Karena itu satu berkas pada dasarnya untuk
+**satu pewaris**, dan pasangan yang masih hidup masuk sebagai **ahli waris**.
+
+Aplikasi mengizinkan **2 pewaris** dalam satu berkas karena blangko kecamatan
+memang menyediakannya. Penggabungan itu **hanya sah bila daftar ahli waris
+kedua pewaris sama persis**, yaitu suami dan istri yang sama-sama meninggal,
+menikah sekali, dan seluruh ahli warisnya anak dari perkawinan itu. Hasilnya
+sama saja, jadi tidak perlu dua kali kerja.
+
+**Begitu istrinya lebih dari satu, daftar itu tidak lagi sama:**
+
+| Pewaris | Ahli warisnya |
+|---|---|
+| Suami | istri yang masih hidup + **semua** anak dari kedua istri |
+| Istri pertama (bila juga meninggal) | **hanya** anak-anak dari istri pertama |
+
+Kalau keduanya digabung jadi satu berkas, surat akan menyatakan anak dari istri
+kedua sebagai ahli waris istri pertama. Itu tidak benar dan berpotensi ditolak
+atau menjadi sengketa di BPN maupun bank.
+
+### Tabel cara input
+
+| Yang meninggal | Cara input |
+|---|---|
+| Suami saja, istri satu | **1 berkas, 1 pewaris.** Istri masuk sebagai ahli waris `Istri`. |
+| Suami saja, istri dua | **1 berkas, 1 pewaris.** Kedua istri masuk sebagai ahli waris `Istri`, tiap anak diberi *Dari Istri*. |
+| Suami dan istri, hanya sekali nikah | **1 berkas, 2 pewaris.** Sah, karena ahli warisnya sama. |
+| Suami dan salah satu istri, sedangkan istrinya dua | **2 berkas terpisah.** Satu untuk suami, satu untuk istri yang meninggal. |
+| Suami dan kedua istri | **3 berkas terpisah**, dengan alasan yang sama. |
+
+Membuat berkas terpisah aman: kunci NIK hanya melarang satu NIK menjadi
+**pewaris** dua kali, sedangkan orang yang sama boleh menjadi ahli waris di
+berkas mana pun. Tiap berkas mendapat nomor registrasinya sendiri.
+
+### Contoh berkas terpisah
+
+Almarhum ZAINAL ABIDIN punya dua istri: HALIMAH (meninggal lebih dulu) dan
+NURHAYATI (masih hidup). Dari HALIMAH ada 2 anak, dari NURHAYATI ada 1 anak.
+
+- **Berkas 1, pewaris ZAINAL ABIDIN.** Ahli waris: NURHAYATI (`Istri`) dan
+  ketiga anak. Centang "menikah lebih dari satu kali", isi *Dari Istri* dengan
+  HALIMAH atau NURHAYATI sesuai ibunya. Nama HALIMAH diketik lewat pilihan
+  **Lainnya** karena dia tidak ada di daftar.
+- **Berkas 2, pewaris HALIMAH.** Ahli waris: **hanya 2 anaknya sendiri**.
+  NURHAYATI dan anaknya tidak ikut.
+
+## 6. Melihat Detail & Merevisi Berkas
 
 Setelah tersimpan, halaman detail menampilkan kedua nomor registrasi, daftar
-3 surat yang dihasilkan, dan seluruh data berkas.
+3 surat yang dihasilkan, dan seluruh data berkas. Bila *Dari Istri* terpakai,
+tabel ahli waris ikut menampilkan kolomnya.
 
 ![Detail berkas](img/14-detail.png)
+
+Berkas yang mencatat 2 pewaris sekaligus lebih dari satu istri diberi kotak
+peringatan kuning di bagian atas halaman ini, termasuk berkas lama yang dibuat
+sebelum aturan itu diberlakukan. Lihat
+[bagian 5](#5-satu-berkas-untuk-siapa-pewaris-istri-lebih-dari-satu).
 
 **Semua data berkas dapat direvisi.** Klik **Ubah Berkas**: formulir
 6 langkah yang sama terbuka dengan seluruh isian lama, silakan perbaiki lalu
@@ -180,7 +274,7 @@ Khusus bagian **Surat Kuasa** (kartu berbingkai hijau di bawah halaman detail)
 juga bisa diubah cepat tanpa membuka formulir: ganti penerima kuasa, data
 pelengkapnya, serta tambah/ubah/hapus urusan kuasa.
 
-## 6. Mencetak / Menyimpan PDF
+## 7. Mencetak / Menyimpan PDF
 
 Dari halaman detail, klik **Cetak 3 Surat**. Tab baru terbuka menampilkan
 pratinjau ketiga surat, lengkap dengan teks hukum, tabel ahli waris, saksi,
@@ -189,7 +283,9 @@ dan blok tanda tangan.
 ![Pratinjau cetak](img/15-cetak.png)
 
 - Klik **Cetak / Simpan PDF**, atau tekan `Ctrl+P`.
-- Kertas **A4**, hasil cetak **tepat 3 halaman** (1 surat = 1 halaman).
+- Kertas **A4**. Tiap surat selalu mulai di halaman baru, jadi berkas dengan
+  ahli waris sedikit menghasilkan **3 halaman**. Bila ahli warisnya banyak,
+  suatu surat bisa memakai 2 lembar; itu wajar, lihat FAQ di bagian akhir.
 - Untuk menyimpan sebagai file, pilih printer **"Save as PDF"** di dialog cetak.
 - Pada dialog cetak, pastikan skala **100%** (bukan "Fit to page") dan ukuran
   kertas A4.
@@ -197,10 +293,27 @@ dan blok tanda tangan.
 Pada blok tanda tangan, kolom **Camat** tercetak dengan nomor register dan
 tanggal titik-titik (`.../SKAW/DT/2026`) untuk diisi tulis tangan oleh pihak
 kecamatan; kolom **Lurah** sudah lengkap dengan nomor dan tanggal otomatis.
+
+### Materai
+
+Di kolom tanda tangan para ahli waris tercetak satu kotak bergaris bertuliskan
+**MATERAI Rp10.000,-**, sejajar di samping deretan nama. Tempelkan **satu
+materai** di kotak itu pada tiap surat, lalu tanda tangan salah satu ahli waris
+mengenai materainya. Bukan satu materai untuk tiap orang.
+
+Pada Surat Kuasa, kotak materai berada di kolom **Yang Memberi Kuasa (PIHAK
+II)**.
+
+### Blok tanda tangan tidak terbelah
+
+Bila isi surat panjang, seluruh blok tanda tangan (saksi, ahli waris, dan
+pejabat) berpindah **utuh** ke halaman berikutnya, tidak terpotong di tengah.
+Akibatnya halaman sebelumnya bisa terlihat kosong di bagian bawah. Itu memang
+disengaja supaya tidak ada nama yang terpisah dari kolom tanda tangannya.
 Di bagian paling bawah tiap halaman ada baris kecil penanda bahwa dokumen
 dicetak melalui aplikasi SIWARIS, beserta nomor register dan tanggal cetaknya.
 
-## 7. Mencari Berkas & Ekspor ke Excel
+## 8. Mencari Berkas & Ekspor ke Excel
 
 Di halaman **Daftar Berkas**, ketik pada kolom pencarian: nomor registrasi,
 nama, atau NIK pewaris. Hasil tersaring otomatis. Klik **Buka** untuk melihat
@@ -215,7 +328,7 @@ surat, alamat, dan status. Bila kolom pencarian sedang terisi, yang diekspor
 hanya hasil pencarian itu. NIK dan nomor registrasi tersimpan sebagai teks
 sehingga digitnya tidak berubah di Excel.
 
-## 8. Melanjutkan Nomor dari Pembukuan Manual
+## 9. Melanjutkan Nomor dari Pembukuan Manual
 
 Bila sebelumnya penomoran dilakukan manual di buku register, buka
 **Pengaturan → Nomor Urut Awal per Tahun**: isi tahun berjalan dan **nomor
@@ -223,7 +336,7 @@ terakhir yang sudah terpakai** di buku. Berkas digital berikutnya otomatis
 melanjutkan dari nomor itu + 1. Tanpa setelan ini, penomoran mulai dari 1
 di tiap tahun.
 
-## 9. Cadangan & Pindah Data (Pindah Komputer)
+## 10. Cadangan & Pindah Data (Pindah Komputer)
 
 Buka **Pengaturan → Cadangan & Pindah Data**.
 
@@ -250,7 +363,7 @@ mengganti, aplikasi otomatis menyimpan data lama ke file
 bisa dikembalikan dengan mengimpor file backup itu. File yang bukan hasil
 ekspor SIWARIS akan ditolak.
 
-## 10. Pembaruan Aplikasi Otomatis
+## 11. Pembaruan Aplikasi Otomatis
 
 Saat dibuka dan komputer sedang terhubung internet, aplikasi mengecek apakah
 ada versi baru. Bila ada, muncul strip kuning di bagian atas:
@@ -271,12 +384,12 @@ Pengaman tambahan di balik layar:
   (mencegah kerusakan data). Solusinya: jalankan versi terbaru, atau impor
   file pra-migrasi di atas bila memang ingin kembali ke versi lama.
 
-## 11. Mengganti Password
+## 12. Mengganti Password
 
 **Pengaturan → Keamanan Akun → Ganti Password.** Isi password lama dan
 password baru dua kali.
 
-## 12. Pertanyaan yang Sering Muncul
+## 13. Pertanyaan yang Sering Muncul
 
 **Kenapa tombol simpan berkas ditolak dengan pesan "Pejabat ... belum diisi"?**
 Prasyarat belum lengkap, lihat [bagian 3](#3-persiapan-awal-wajib-sekali-saja).
@@ -288,17 +401,39 @@ lamanya lewat pencarian NIK, lalu pakai/cetak ulang berkas tersebut.
 **Data salah ketik tapi berkas sudah tersimpan, bagaimana?**
 Buka berkasnya lalu klik **Ubah Berkas**; semua data bisa diperbaiki dan
 disimpan ulang; nomor register tidak berubah
-(lihat [bagian 5](#5-melihat-detail--merevisi-berkas)).
+(lihat [bagian 6](#6-melihat-detail--merevisi-berkas)).
 
 **Hasil cetak lebih dari 3 halaman?**
-Pastikan ukuran kertas di dialog cetak = A4 dan skala 100%. Berkas dengan
-ahli waris sangat banyak memang bisa meluber ke halaman tambahan; pemecahan
-halamannya tetap rapi (tabel/tanda tangan tidak terpotong).
+Pastikan ukuran kertas di dialog cetak = A4 dan skala 100%. Kalau sudah benar
+tapi tetap lebih, berarti isinya memang tidak muat: berkas dengan ahli waris
+banyak membuat blok tanda tangan pindah utuh ke lembar berikutnya. Itu
+disengaja supaya tidak ada nama yang terpisah dari kolom tanda tangannya, jadi
+halaman sebelumnya boleh terlihat kosong di bagian bawah.
+
+**Kenapa jumlah "orang anak" di surat berkurang dibanding cetakan lama?**
+Istri atau suami yang terdaftar sebagai ahli waris sekarang tidak lagi ikut
+dihitung sebagai anak. Contohnya berkas dengan 1 istri dan 3 anak: dulu
+tertulis 4 orang anak, sekarang 3. Yang sekarang ini yang benar.
+
+**Ahli waris punya ibu yang berbeda, bagaimana menuliskannya?**
+Centang **"Pewaris menikah lebih dari satu kali"** di Langkah 3, lalu isi
+**Dari Istri** pada tiap ahli waris. Lihat
+[bagian 5](#5-satu-berkas-untuk-siapa-pewaris-istri-lebih-dari-satu).
+
+**Muncul kotak kuning "Periksa lagi ... 2 pewaris sekaligus 2 istri".**
+Berkas itu menggabungkan dua pewaris yang ahli warisnya tidak sama. Sebaiknya
+dipecah menjadi berkas terpisah untuk masing-masing pewaris; penjelasan dan
+contohnya ada di
+[bagian 5](#5-satu-berkas-untuk-siapa-pewaris-istri-lebih-dari-satu).
+
+**Berapa materai yang perlu ditempel?**
+Satu materai Rp10.000 per surat, di kotak yang sudah tercetak pada kolom tanda
+tangan ahli waris. Bukan satu materai untuk tiap orang.
 
 **Bagaimana backup data?**
 Pengaturan, kartu **Cadangan & Pindah Data**, klik **Unduh Cadangan (.db)**;
 aplikasi tidak perlu ditutup. Memulihkan = **Impor dari File Cadangan** di
-kartu yang sama (lihat [bagian 9](#9-cadangan--pindah-data-pindah-komputer)).
+kartu yang sama (lihat [bagian 10](#10-cadangan--pindah-data-pindah-komputer)).
 
 ---
 

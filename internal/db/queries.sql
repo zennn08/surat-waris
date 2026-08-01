@@ -188,18 +188,18 @@ ORDER BY urutan, id;
 
 -- AHLI WARIS
 -- name: CreateAhliWaris :one
-INSERT INTO ahli_waris (berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, tempat_lahir, tgl_lahir, pekerjaan)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, tempat_lahir, tgl_lahir, pekerjaan;
+INSERT INTO ahli_waris (berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, dari_istri, tempat_lahir, tgl_lahir, pekerjaan)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, dari_istri, tempat_lahir, tgl_lahir, pekerjaan;
 
 -- name: ListAhliWarisByBerkas :many
-SELECT id, berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, tempat_lahir, tgl_lahir, pekerjaan
+SELECT id, berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, dari_istri, tempat_lahir, tgl_lahir, pekerjaan
 FROM ahli_waris
 WHERE berkas_id = ?
 ORDER BY urutan, id;
 
 -- name: GetAhliWaris :one
-SELECT id, berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, tempat_lahir, tgl_lahir, pekerjaan
+SELECT id, berkas_id, urutan, nama, nik, umur, jenis_kelamin, agama, alamat, keterangan, dari_istri, tempat_lahir, tgl_lahir, pekerjaan
 FROM ahli_waris
 WHERE id = ?;
 

@@ -113,6 +113,41 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
   await sleep(400)
   await shot('17-ubah-berkas')
 
+  // 8c. Kasus pewaris menikah lebih dari sekali + peringatan pewaris ganda.
+  //     Berkas ini sengaja TIDAK disimpan, hanya untuk screenshot.
+  await page.goto(BASE + '/#/')
+  await sleep(500)
+  await page.click('.nav a:has-text("Buat Berkas")')
+  await page.waitForSelector('.wiz-steps')
+  await page.click('button:has-text("Isi Data Contoh")')
+  await sleep(300)
+  await page.click('button:has-text("Lanjut")') // ke Pewaris
+  await sleep(300)
+  await page.click('button:has-text("Lanjut")') // ke Ahli Waris
+  await page.waitForSelector('.cek-multinikah')
+  await page.check('.cek-multinikah input[type=checkbox]')
+  await sleep(400)
+  const kartuAhli = (i) => page.locator('.item-card').nth(i)
+  const kolom = (i, label) =>
+    kartuAhli(i).locator('.field').filter({ has: page.locator('label', { hasText: label }) })
+  // Anak pertama dari istri terdahulu yang sudah meninggal: ketik namanya sekali.
+  await kolom(0, 'Dari Istri').locator('select').selectOption('Lainnya')
+  await sleep(300)
+  await kolom(0, 'Dari Istri').locator('input.ketik-lain').fill('MARDIANA')
+  await kolom(0, 'Dari Istri').locator('input.ketik-lain').blur()
+  await sleep(400)
+  // Anak kedua tinggal pilih dari daftar.
+  await kolom(1, 'Dari Istri').locator('select').selectOption('SARITISA TAFONAO')
+  await sleep(400)
+  await shot('19-langkah3-dari-istri', { fullPage: true })
+  await page.click('button:has-text("Lanjut")') // Saksi
+  await sleep(300)
+  await page.click('button:has-text("Lanjut")') // Surat Kuasa
+  await sleep(300)
+  await page.click('button:has-text("Lanjut")') // Periksa
+  await page.waitForSelector('.alert-warn')
+  await shot('20-peringatan-pewaris-ganda', { fullPage: true })
+
   // 9. Halaman cetak
   await page.goto(BASE + '/berkas/1/cetak')
   await page.waitForSelector('.judul')

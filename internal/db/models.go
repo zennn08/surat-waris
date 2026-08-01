@@ -19,6 +19,7 @@ type AhliWaris struct {
 	Agama        sql.NullString `json:"agama"`
 	Alamat       sql.NullString `json:"alamat"`
 	Keterangan   sql.NullString `json:"keterangan"`
+	DariIstri    sql.NullString `json:"dari_istri"`
 	TempatLahir  sql.NullString `json:"tempat_lahir"`
 	TglLahir     sql.NullString `json:"tgl_lahir"`
 	Pekerjaan    sql.NullString `json:"pekerjaan"`

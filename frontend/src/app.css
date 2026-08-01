@@ -95,6 +95,18 @@ a { color: var(--primary); }
 .field { margin-bottom: 1rem; }
 .field label { display: block; font-size: 0.95rem; font-weight: 600; color: var(--text); margin-bottom: 0.35rem; }
 .field .help { font-size: 0.85rem; color: var(--muted); margin-top: 0.25rem; }
+/* kotak isian yang muncul setelah memilih "Lainnya" pada sebuah dropdown */
+.field .ketik-lain { margin-top: 0.4rem; }
+
+/* Centang lebar dengan penjelasan di bawahnya (mis. "menikah lebih dari sekali") */
+.cek-multinikah {
+  display: flex; gap: 0.7rem; align-items: flex-start; cursor: pointer;
+  padding: 0.8rem 1rem; margin-bottom: 1rem;
+  border: 1px solid var(--border-strong); border-radius: 8px; background: var(--bg);
+}
+.cek-multinikah input { width: auto; margin-top: 0.15rem; flex: none; }
+.cek-multinikah span { font-weight: 600; }
+.cek-multinikah small { display: block; font-weight: 400; font-size: 0.85rem; color: var(--muted); margin-top: 0.2rem; }
 input, select, textarea {
   width: 100%; padding: 0.65rem 0.75rem; border: 1px solid var(--border-strong);
   border-radius: 8px; font-family: inherit; font-size: 1.02rem; background: #fff; color: var(--text);
