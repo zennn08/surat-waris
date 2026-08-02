@@ -31,11 +31,26 @@ Surat Pernyataan Ahli Waris) di kertas A4, tiap surat mulai di halaman baru.
 ## 1. Menjalankan Aplikasi
 
 1. Unduh `siwaris.exe` dari halaman *Releases* (atau minta file-nya ke pengelola),
-   lalu klik dua kali.
+   lalu klik dua kali. Icon-nya berupa lambang silsilah keluarga berlatar hijau.
 2. Browser terbuka otomatis ke alamat aplikasi (biasanya `http://localhost:8080`).
 3. Seluruh data tersimpan di file `surat-waris.db` **di folder yang sama dengan
    exe** dan tidak butuh internet. Untuk backup atau pindah komputer, pakai
    fitur bawaan di [bagian 10](#10-cadangan--pindah-data-pindah-komputer).
+
+### Kalau tab browser tertutup
+
+Aplikasi tetap jalan di belakang layar walaupun tab browser ditutup. Untuk
+membukanya lagi, ada dua cara yang sama-sama benar:
+
+- **Klik dua kali `siwaris.exe` lagi.** Aplikasi tahu dirinya sudah jalan, jadi
+  dia tidak menjalankan aplikasi kedua, cukup membuka tab browser baru ke
+  aplikasi yang sedang berjalan. Diklik sepuluh kali pun aman, data tidak akan
+  bertabrakan.
+- **Buka `http://localhost:8080` di Chrome.** Alamat ini boleh di-*bookmark*
+  supaya sekali klik langsung terbuka.
+
+> Aplikasi baru benar-benar berhenti kalau komputer dimatikan, atau prosesnya
+> dihentikan lewat Task Manager.
 
 ## 2. Login Pertama Kali
 
@@ -429,6 +444,19 @@ contohnya ada di
 **Berapa materai yang perlu ditempel?**
 Satu materai Rp10.000 per surat, di kotak yang sudah tercetak pada kolom tanda
 tangan ahli waris. Bukan satu materai untuk tiap orang.
+
+**Tab browser sudah saya tutup, aplikasinya hilang. Datanya aman?**
+Aman. Menutup tab tidak menutup aplikasi dan tidak menghapus apa pun. Klik dua
+kali `siwaris.exe` lagi, atau buka `http://localhost:8080` di Chrome
+(lihat [bagian 1](#1-menjalankan-aplikasi)).
+
+**Kalau `siwaris.exe` terlanjur saya klik berkali-kali, apa datanya rusak?**
+Tidak. Klik kedua dan seterusnya hanya membuka tab browser ke aplikasi yang
+sudah berjalan, tidak menjalankan aplikasi kedua.
+
+**Ada file `siwaris-port.txt` di folder aplikasi, boleh dihapus?**
+Boleh, itu hanya catatan alamat aplikasi yang sedang berjalan dan akan dibuat
+ulang sendiri. Bukan file data.
 
 **Bagaimana backup data?**
 Pengaturan, kartu **Cadangan & Pindah Data**, klik **Unduh Cadangan (.db)**;

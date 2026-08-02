@@ -14,6 +14,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -25,8 +26,9 @@ import (
 )
 
 const (
-	defaultPort = "8080"
-	dbFileName  = "surat-waris.db"
+	defaultPort  = "8080"
+	dbFileName   = "surat-waris.db"
+	portFileName = "siwaris-port.txt"
 )
 
 // version diisi saat build via -ldflags "-X main.version=v1.x.x" (lihat CI/Makefile).
@@ -47,6 +49,21 @@ func main() {
 		}
 	})
 
+	dir, err := exeDir()
+	if err != nil {
+		log.Fatalf("gagal menentukan folder aplikasi: %v", err)
+	}
+
+	// Diklik dua kali padahal sudah jalan: cukup buka browser ke instance yang
+	// ada, jangan sentuh database (dua proses di satu file DB = risiko rusak).
+	if !spawned && !*seedOnly {
+		if url, ok := instanceBerjalan(dir); ok {
+			log.Printf("SIWARIS sudah berjalan di %s, membuka browser", url)
+			openBrowser(url)
+			return
+		}
+	}
+
 	cleanupOldExe()
 
 	sqldb, err := openDB()
@@ -55,10 +72,6 @@ func main() {
 	}
 	defer sqldb.Close()
 
-	dir, err := exeDir()
-	if err != nil {
-		log.Fatalf("gagal menentukan folder aplikasi: %v", err)
-	}
 	if err := db.Migrate(sqldb, dir); err != nil {
 		if errors.Is(err, db.ErrDBNewer) {
 			sqldb.Close()
@@ -92,6 +105,11 @@ func main() {
 
 	url := fmt.Sprintf("http://localhost:%s", port)
 	srv := &http.Server{Handler: r}
+
+	portFile := filepath.Join(dir, portFileName)
+	if err := os.WriteFile(portFile, []byte(port), 0o644); err != nil {
+		log.Printf("gagal menulis %s: %v", portFileName, err)
+	}
 
 	// restart pasca-pembaruan: matikan server & DB, jalankan exe baru di port
 	// yang sama, lalu keluar. Proses baru menunggu port dilepas (flag --port).
@@ -129,7 +147,30 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	_ = srv.Shutdown(ctx)
+	_ = os.Remove(portFile)
 	log.Println("server berhenti")
+}
+
+// instanceBerjalan mengecek apakah SIWARIS dari folder ini sudah jalan.
+// Berkas port ditulis saat server siap; kalau probe-nya gagal berarti itu sisa
+// proses lama yang sudah mati, jadi pemanggil lanjut jalan seperti biasa.
+func instanceBerjalan(dir string) (string, bool) {
+	b, err := os.ReadFile(filepath.Join(dir, portFileName))
+	if err != nil {
+		return "", false
+	}
+	port := strings.TrimSpace(string(b))
+	if port == "" {
+		return "", false
+	}
+	url := "http://localhost:" + port
+	c := &http.Client{Timeout: 2 * time.Second}
+	resp, err := c.Get(url + "/healthz")
+	if err != nil {
+		return "", false
+	}
+	defer resp.Body.Close()
+	return url, resp.StatusCode == http.StatusOK
 }
 
 // openDB membuka/membuat surat-waris.db di direktori exe (WAL, foreign keys).

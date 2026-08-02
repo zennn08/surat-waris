@@ -25,6 +25,11 @@ Satu kali input menghasilkan **3 surat** siap cetak:
 Browser default terbuka otomatis ke `http://localhost:8080` (otomatis pindah port bila
 8080 terpakai). Database dibuat otomatis di samping exe.
 
+Kalau exe diklik lagi padahal aplikasi sudah jalan, proses kedua **tidak** dijalankan:
+exe membaca `siwaris-port.txt` di folder aplikasi, memastikan instance lama masih hidup
+lewat `/healthz`, lalu cukup membuka browser ke alamat itu dan keluar. Berkas port basi
+(aplikasi mati mendadak) otomatis diabaikan dan ditimpa.
+
 Login awal: **admin** / **admin123** (wajib ganti password saat login pertama).
 Panduan lengkap bergambar: [docs/panduan-penggunaan.md](docs/panduan-penggunaan.md).
 
@@ -44,6 +49,20 @@ CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-H windowsgui -s -w" 
 ```
 
 Atau lewat Makefile: `make build-frontend && make build-win`.
+
+### Icon aplikasi
+
+Sumbernya `SIWARIS.png` (2000x2000). Dari situ dibuat `siwaris.ico` berisi 6 ukuran:
+16/32/48/64 memakai simbolnya saja (tulisan "SIWARIS" tak terbaca di ukuran segitu),
+128/256 memakai logo utuh. Icon menempel ke exe lewat `rsrc_windows_amd64.syso` yang
+sudah di-commit; Go otomatis me-link-nya, tak ada dependency tambahan. Regenerate hanya
+bila logonya berubah:
+
+```bash
+go run github.com/akavel/rsrc@latest -ico siwaris.ico -o rsrc_windows_amd64.syso
+```
+
+Icon tab browser memakai file yang sama, disalin ke `frontend/public/favicon.ico`.
 
 ### Regenerate query (sqlc)
 

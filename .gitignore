@@ -7,6 +7,7 @@ surat-waris
 surat-waris.db
 surat-waris.db-shm
 surat-waris.db-wal
+siwaris-port.txt
 
 # Tooling lokal (sqlc prebuilt) & artefak sementara
 .tools/
